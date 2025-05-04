@@ -1,0 +1,15 @@
+{
+    "development": {
+      "username": "postgres",
+      "password": "khadijah0001",
+      "database": "postgres",
+      "host": "localhost",
+      "dialect": "postgres",
+      "logging": false,
+      "define": {
+        "underscored": true
+      }
+      
+    }
+  }
+  
