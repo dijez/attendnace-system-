@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Attendance</title>
+  <style>
+
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #f9f9f9;
+    }
+    .container {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    form, .location-section {
+      margin-bottom: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+    }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .result {
+      padding: 10px;
+      background: #e9ecef;
+      border-radius: 4px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Create Attendance</h1>
+
+    <!-- Step 1: Course Selection and Details -->
+    <form id="courseForm">
+      <label for="course_title">Course Title</label>
+      <select id="course_title" name="course_title" required>
+        <option value="">-- Select a Course --</option>
+      </select>
+
+      <label for="course_code">Course Code</label>
+      <input type="text" id="course_code" name="course_code" readonly required>
+     
+     
+      <label for="course_id">Course ID</label>
+      <input type="text" id="course_id" name="course_id" readonly required>
+
+      <label for="date">Date</label>
+      <input type="date" name="date" id="date" required>
+
+      <label for="time">Start Time</label>
+      <input type="time" name="start_time" id="start_time" required>
+
+      <label for="end_time">End Time</label>
+      <input type="time" name="end_time" id="end_time" required>
+
+      <label for="number_of_students">Number of Students</label>
+      <input type="number" name="number_of_students" id="number_of_students" required>
+
+      <button type="button" id="nextButton">Next</button>
+    </form>
+
+    <!-- Step 2: Location Capture -->
+    <div class="location-section" style="display:none;">
+      <h2>Step 2: Confirm Location</h2>
+      <button id="getLocationButton">Get My Location</button>
+      <div id="locationResult"></div>
+      <button id="submitButton" style="display:none;">Submit</button>
+    </div>
+
+    <!-- QR Code Display -->
+    <div id="qrCodeContainer" style="display: none; text-align: center;">
+      <h3>Generated QR Code:</h3>
+      <img id="qrCodeImage" alt="QR Code" />
+    </div>
+  </div>
+  <div id="makeActiveWrapper" style="display: none;">
+    <button id="makeActiveBtn">Make Active</button>
+  </div>
+  
+
+  <script>
+    let formData = {};
+    const token = localStorage.getItem('token');
+    if (!token) {
+  alert('Not logged in. Redirecting to login...');
+  window.location.href = '/login.html'; // or wherever your login page is
+}
+
+fetch('/api/lecturer/courses', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+})
+.then(res => res.json())
+.then(courses => {
+  const courseSelect = document.getElementById('course_title');
+
+  courses.forEach((course) => {
+    const option = document.createElement('option');
+    option.value = course.course_name;
+    option.textContent = course.course_name;
+    option.setAttribute('data-code', course.courseCode); // Store course code
+    option.setAttribute('data-id', course.id);  
+    courseSelect.appendChild(option);
+  });
+
+
+
+
+  // Handle course selection
+  courseSelect.addEventListener('change', (e) => {
+    const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+    const selectedCourseCode = selectedOption.getAttribute('data-code');
+    const selectedCourseId = selectedOption.getAttribute('data-id');
+    document.getElementById('course_code').value = selectedCourseCode || '';
+    document.getElementById('course_id').value = selectedCourseId || '';
+  });
+})
+.catch(err => {
+  console.error('Error fetching courses:', err);
+  alert('Could not load course list.');
+});
+
+
+
+    // // Next Step button click
+    // document.getElementById('nextButton').addEventListener('click', () => {
+    //   formData = {
+    //     course_id: parseInt(courseSelect.value, 10),
+    //     course_name: document.getElementById('course_title').value.trim(),
+    //     course_code: document.getElementById('course_code').value.trim(),
+    //     date: document.getElementById('date').value,
+    //     time: document.getElementById('start_time').value,
+    //     end_time: document.getElementById('end_time').value,
+    //     expected_students: parseInt(document.getElementById('number_of_students').value, 10)
+    //   };
+
+    //   if (!formData.course_name || !formData.course_code || !formData.date || !formData.time || isNaN(formData.expected_students)) {
+    //     alert('Please fill out all fields correctly.');
+    //     return;
+    //   }
+
+    //   document.querySelector('form').style.display = 'none';
+    //   document.querySelector('.location-section').style.display = 'block';
+    // });
+
+
+
+
+
+   document.getElementById('nextButton').addEventListener('click', () => {
+  const courseSelect = document.getElementById('course_title');
+  const selectedOption = courseSelect.options[courseSelect.selectedIndex];
+
+  const selectedCourseId = selectedOption.getAttribute('data-id');
+  const selectedCourseCode = selectedOption.getAttribute('data-code');
+
+  formData = {
+    course_id: parseInt(selectedCourseId, 10),
+    course_name: document.getElementById('course_title').value.trim(),
+        course_code: document.getElementById('course_code').value.trim(),
+        date: document.getElementById('date').value,
+        time: document.getElementById('start_time').value,
+        end_time: document.getElementById('end_time').value,
+        expected_students: parseInt(document.getElementById('number_of_students').value, 10)
+     
+  };
+
+  if (!formData.course_name || !formData.course_code || !formData.date || !formData.time || isNaN(formData.expected_students)) {
+    alert('Please fill out all fields correctly.');
+    return;
+  }
+     document.querySelector('form').style.display = 'none';
+      document.querySelector('.location-section').style.display = 'block';
+   });
+
+
+
+
+    // Get Location
+    document.getElementById('getLocationButton').addEventListener('click', () => {
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          formData.latitude = position.coords.latitude;
+          formData.longitude = position.coords.longitude;
+          document.getElementById('locationResult').textContent = `Location: ${formData.latitude}, ${formData.longitude}`;
+          document.getElementById('submitButton').style.display = 'block';
+        },
+        (error) => {
+          alert('Error fetching location: ' + error.message);
+        }
+      );
+    });
+
+
+
+
+    // Submit form to backend
+    document.getElementById('submitButton').addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/lecturer/attendance/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData),
+        });
+        console.log('Submitting attendance form data:', formData);
+
+        const data = await response.json();
+        if (response.ok) {
+          alert('Attendance created successfully!');
+          console.log(data);
+
+          window.sessionId = data.sessionId;
+
+          // Display the QR code
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            qrCodeImage.src = data.qrCode; // Set the QR code image source
+        //   document.getElementById('qrCodeImage').src = data.qrCode;
+          document.getElementById('qrCodeContainer').style.display = 'block';
+          document.getElementById('makeActiveWrapper').style.display = 'block';
+
+        } else {
+          alert('Error: ' + data.message);
+        }
+      } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while submitting the form.');
+      }
+    });
+
+
+
+    // make active 
+    document.getElementById('makeActiveBtn').addEventListener('click', async () => {
+  try {
+    const courseCode = document.getElementById('course_code').value.trim();
+    if (!courseCode) {
+      alert('Course code is missing');
+      return;
+    }
+    console.log('Sending course code:', formData.course_code);
+
+    const response = await fetch('/api/lecturer/make-active-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}` 
+       },
+      body: JSON.stringify({ course_code: formData.course_code})
+      
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to activate session');
+    }
+
+    const data = await response.json();
+    console.log(data);
+
+    alert('Session is now active!');
+  } catch (error) {
+    console.error('Error activating session:', error);
+  }
+});
+
+
+  </script>
+</body>
+</html>

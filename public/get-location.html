@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Get Location for Attendance</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f8f8f8; padding: 20px; }
+    .container { background: #fff; padding: 30px; max-width: 500px; margin: auto; border-radius: 10px; }
+    h2 { text-align: center; }
+    .info { margin-top: 20px; }
+    .loading { text-align: center; margin-top: 30px; font-weight: bold; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Getting Location...</h2>
+    <p class="loading" id="status">Please wait while we get your location...</p>
+    <div class="info" id="locationInfo"></div>
+    <button id="submit-attendance" style="display:none;">Submit Attendance</button>
+  </div>
+
+  <script>
+    const token = localStorage.getItem('token'); 
+    const attendanceData = JSON.parse(sessionStorage.getItem('attendanceSession'));
+
+    if (!attendanceData) {
+      document.getElementById('status').innerText = 'No attendance session data found.';
+    } else {
+      // Request geolocation
+      navigator.geolocation.getCurrentPosition(success, error);
+
+      function success(position) {
+        const latitude = position.coords.latitude;
+        const longitude = position.coords.longitude;
+
+        document.getElementById('status').innerText = 'Location acquired. Ready to submit attendance.';
+
+        const payload = {
+          ...attendanceData,
+          latitude,
+          longitude
+        };
+
+        // Show submit button
+        document.getElementById('submit-attendance').style.display = 'block';
+
+        // Handle attendance submission
+        document.getElementById('submit-attendance').addEventListener('click', () => {
+            console.log(payload); 
+          fetch('/api/lecturer/create-attendance', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify(payload)
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              document.getElementById('locationInfo').innerHTML = `<p><strong>Success:</strong> ${data.message}</p>`;
+            } else {
+              document.getElementById('locationInfo').innerHTML = `<p><strong>Error:</strong> ${data.message}</p>`;
+            }
+          })
+          .catch(err => {
+            console.error(err);
+            document.getElementById('locationInfo').innerHTML = `<p><strong>Error:</strong> Could not submit data.</p>`;
+          });
+        });
+      }
+
+      function error(err) {
+        console.error(err);
+        document.getElementById('status').innerText = 'Failed to get location. Please allow location access.';
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+/* Basic reset (optional) */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  .staff-sidebar {
+    width: 220px;
+    height: 100vh; 
+    background-color: #192a56;
+    color: #ffff;
+    position: fixed;
+    top: 0;
+    left: 0;
+    overflow-y: auto;
+  }
+  
+  .staff-brand {
+    text-align: center;
+    padding: 1rem;
+    background-color: #273c75;
+  }
+  
+  .staff-brand h2 {
+    font-size: 1.2rem;
+  }
+  
+  .staff-nav {
+    list-style: none;
+    margin-top: 1rem;
+  }
+  
+  .staff-nav li {
+    margin: 0.5rem 0;
+  }
+  
+  .staff-nav a {
+    display: block;
+    padding: 0.75rem 1rem;
+    color: #000;
+    text-decoration: none;
+    
+  }
+  
+  .staff-nav a:hover {
+    background-color: #2e5ca5;
+  }
+  

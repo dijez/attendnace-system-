@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+   
+    <style>
+
+      /* Reset Styles */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+/* Full Page Background */
+body {
+    /* background: url('background.jpeg') no-repeat center center/cover; */
+    height: 100vh;
+    display: flex;
+}
+
+/* Sidebar Navigation */
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 20px;
+    position: fixed;
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.sidebar ul li {
+    padding: 10px;
+    margin: 5px 0;
+    border-radius: 5px;
+}
+
+.sidebar ul li a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    padding: 10px;
+    transition: 0.3s;
+}
+
+.sidebar ul li a:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+}
+
+/* Logout Styling */
+#logout a {
+    background: red;
+    text-align: center;
+    display: block;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+#logout a:hover {
+    background: darkred;
+}
+
+/* Main Content */
+.content {
+    margin-left: 270px;
+    padding: 50px;
+    color: white;
+    text-shadow: 1px 1px 3px black;
+}
+
+h1 {
+    font-size: 36px;
+}
+
+p {
+    font-size: 18px;
+}
+#registered-courses {
+    margin-top: 20px;
+    list-style-type: none;
+    padding: 0;
+}
+
+#registered-courses li {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 10px 15px;
+    margin: 8px 0;
+    border-left: 4px solid #00c3ff;
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <nav class="sidebar">
+            <h2>student Panel</h2>
+            <ul>
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="./student-register-course.html">register course</a></li>
+                <li><a href="./student-courses.html">My Courses</a></li>
+                <li><a href="#">Take Attendance</a></li>
+                <li><a href="#">View Attendance</a></li>
+                <li><a href="#">View Profile</a></li>
+                <li id="logout"><a href="./student-dashboard.html">Logout</a></li>
+            </ul>
+        </nav>
+
+
+        <!-- Main Content -->
+        <main class="content">
+            <h1>Welcome to Your Dashboard</h1>
+            <p>Manage students, staff, and attendance easily from here.</p>
+            <h2>Registered Courses</h2>
+            <ul id="registered-courses">
+              
+            </ul>
+            
+          </main>
+        </div>
+
+        
+        <script src="student-script.js"></script>
+</body>
+</html>

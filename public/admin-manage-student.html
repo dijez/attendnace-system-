@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>manage student</title>
+    <style>
+        /* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f4f4f4;
+    color: #333;
+}
+
+/* Container */
+.container {
+    width: 80%;
+    margin: 50px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    color: #007bff;
+}
+
+/* Table Styling */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+th {
+    background: #007bff;
+    color: white;
+}
+
+tr:hover {
+    background: rgba(0, 123, 255, 0.2);
+}
+
+/* Responsive */
+@media screen and (max-width: 600px) {
+    .container {
+        width: 95%;
+    }
+    table {
+        font-size: 14px;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Manage students</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Created At</th>
+                </tr>
+            </thead>
+            <tbody id="student-list">
+                <!-- student data will be injected here -->
+            </tbody>
+        </table>
+    </div>
+    
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+    fetch('/api/admin/students')
+        .then(res => res.json())
+        .then(data => {
+            let studentTable = document.getElementById('student-list');
+            studentTable.innerHTML = data.map(student => `
+                <tr>
+                    <td>${student.username}</td>
+                    <td>${student.email}</td>
+                    <td>${new Date(student.createdAt).toLocaleString()}</td>
+                </tr>
+            `).join('');
+        })
+        .catch(err => console.error("Error loading students:", err));
+});
+
+    </script>
+</body>
+</html>

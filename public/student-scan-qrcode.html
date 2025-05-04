@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan QR Code</title>
+  <link rel="stylesheet" href="./student.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    #reader { width: 100%; max-width: 400px; margin: auto; display: none; }
+    #status-text { margin-top: 20px; text-align: center; font-size: 1.1rem; }
+    #back-to-dashboard { display: none; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h2>Scan QR Code</h2>
+  <div id="reader"></div>
+  <p id="status-text">Checking your location...</p>
+  <button id="back-to-dashboard">Return to Dashboard</button>
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const course_id = urlParams.get('course_id');
+    const sessionId = urlParams.get('sessionId');
+    const token = localStorage.getItem('token');
+    const statusText = document.getElementById('status-text');
+    const backBtn = document.getElementById('back-to-dashboard');
+    const reader = document.getElementById('reader');
+    const DISTANCE_THRESHOLD = 30; // meters
+
+    function toRadians(degrees) {
+      return degrees * Math.PI / 180;
+    }
+
+    function haversine(lat1, lon1, lat2, lon2) {
+      const R = 6371e3; // meters
+      const dLat = toRadians(lat2 - lat1);
+      const dLon = toRadians(lon2 - lon1);
+      const a = Math.sin(dLat / 2) ** 2 +
+                Math.cos(toRadians(lat1)) * Math.cos(toRadians(lat2)) *
+                Math.sin(dLon / 2) ** 2;
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      return R * c;
+    }
+
+    function markAttendance(qrData, latitude, longitude) {
+      console.log("Submitting:", {
+
+        sessionId: parseInt(sessionId),
+          course_id: parseInt(course_id),
+          studentLat: latitude,
+          studentLng: longitude
+
+})
+     return fetch('/api/student/mark-attendance', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          sessionId: parseInt(sessionId),
+          course_id: parseInt(course_id),
+          qrData,
+          studentLat: latitude,
+          studentLng: longitude
+        })
+      })
+      
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          statusText.textContent = '✅ Attendance marked successfully!';
+          statusText.style.color = 'green';
+          backBtn.style.display = 'inline-block'; 
+        } else {
+          statusText.textContent = '❌ Failed to mark attendance.';
+          statusText.style.color = 'red';
+          html5QrcodeScanner.render(onScanSuccess);
+        }
+      })
+      .catch(err => {
+        statusText.textContent = '⚠️ Error submitting attendance.';
+        statusText.style.color = 'red';
+        console.error(err);
+      });
+    }
+
+    function onScanSuccess(qrData) {
+      html5QrcodeScanner.clear().then(() => {
+        statusText.textContent = '📍 Verifying location...';
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const latitude = position.coords.latitude;
+            const longitude = position.coords.longitude;
+            markAttendance(qrData, latitude, longitude);
+          },
+          (error) => {
+            console.error(error);
+            statusText.textContent = '❌ Failed to get location';
+            statusText.style.color = 'red';
+          }
+        );
+      });
+    }
+
+    async function verifyProximityAndStart() {
+      if (!course_id || !sessionId || !token) {
+        statusText.textContent = '❌ Missing required parameters or not logged in.';
+        statusText.style.color = 'red';
+        return;
+      }
+
+      try {
+        const sessionRes = await fetch(`/api/student/session-location?course_id=${course_id}&sessionId=${sessionId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        const sessionData = await sessionRes.json();
+        if (!sessionData.success) {
+          statusText.textContent = '❌ Could not fetch session location.';
+          return;
+        }
+
+        const lecturerLat = sessionData.latitude;
+        const lecturerLng = sessionData.longitude;
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const studentLat = position.coords.latitude;
+            const studentLng = position.coords.longitude;
+
+            const distance = haversine(studentLat, studentLng, lecturerLat, lecturerLng);
+            if (distance <= DISTANCE_THRESHOLD) {
+              statusText.textContent = '✅ You are within range. Scanner starting...';
+              statusText.style.color = 'green';
+              reader.style.display = 'block';
+              html5QrcodeScanner.render(onScanSuccess);
+            } else {
+              statusText.textContent = `❌ Too far from class location (${Math.round(distance)}m). Move closer.`;
+              statusText.style.color = 'red';
+            }
+          },
+          (error) => {
+            console.error(error);
+            statusText.textContent = '❌ Failed to get your location.';
+            statusText.style.color = 'red';
+          }
+        );
+
+      } catch (err) {
+        statusText.textContent = '❌ Error during setup.';
+        statusText.style.color = 'red';
+        console.error(err);
+      }
+    }
+
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader", { fps: 10, qrbox: 250 }
+    );
+
+    verifyProximityAndStart();
+
+    backBtn.addEventListener('click', () => {
+      window.location.href = '/student-dashboard.html';
+    });
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+<!-- 
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Scan QR Code</title>
+  <link rel="stylesheet" href="./student.css">
+  <script src="https://unpkg.com/html5-qrcode"></script>
+</head>
+<body>
+  <h2>Scan QR Code</h2>
+  <div id="qr-reader" style="width: 300px;"></div>
+  <p id="status-text">Waiting for QR code...</p>
+  <button  id="back-to-dashboard" style="margin-top: 20px;" >Return to Dashboard</button>
+
+
+  <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const course_id = urlParams.get('course_id');
+    const sessionId = urlParams.get('sessionId');
+    const token = localStorage.getItem('token');
+    const statusText = document.getElementById('status-text');
+    const backBtn = document.getElementById('back-to-dashboard');
+    
+
+    if (!course_id || !sessionId || !token) {
+      statusText.textContent = 'Missing required parameters or not logged in.';
+      statusText.style.color = 'red';
+    } else {
+      function markAttendance(qrData) {
+        fetch('/api/student/mark-attendance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            sessionId,
+            course_id,
+          })
+        })
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              statusText.textContent = '✅ Attendance marked successfully!';
+              statusText.style.color = 'green';
+              if (data.success) {
+                     statusText.textContent = ' Attendance marked successfully!';
+                     statusText.style.color = 'green';
+                     backBtn.style.display = 'inline-block'; 
+                    
+                    }
+
+            } else {
+              statusText.textContent = '❌ Failed to mark attendance.';
+              statusText.style.color = 'red';
+              html5QrcodeScanner.clear().then(() => {
+                html5QrcodeScanner.render(onScanSuccess);
+        });
+            }
+          })
+          .catch(err => {
+            statusText.textContent = '⚠️ Error submitting attendance.';
+            console.error(err);
+          });
+      }
+
+      function onScanSuccess(qrData) {
+        html5QrcodeScanner.clear().then(() => {
+          statusText.textContent = 'Verifying...';
+          markAttendance(qrData);
+        });
+      }
+
+      const html5QrcodeScanner = new Html5QrcodeScanner(
+        "qr-reader", { fps: 10, qrbox: 250 }
+      );
+      html5QrcodeScanner.render(onScanSuccess);
+    }
+    
+
+    backBtn.addEventListener('click', () => {
+  window.location.href = '/student-dashboard.html';
+});
+// Then inside .then() after successful attendance:
+
+  </script>
+</body>
+</html>  -->
+

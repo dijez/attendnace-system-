@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Courses</title>
+  <link rel="stylesheet" href="./student.css">
+</head>
+<body>
+  <div class="my-courses-header">
+    <h2>My Courses</h2>
+    <button id="refresh-courses" class="refresh-btn">Refresh</button>
+  </div>
+
+  <div id="my-registered-courses"></div>
+
+  <!-- Template for course item -->
+  <template id="course-template">
+    <div class="course-box" data-course-id="">
+      <h3 class="course-title"></h3>
+      <p class="course-status">Status: ...</p>
+      <button class="scan-btn" style="display: none;"> Scan Now</button>
+    </div>
+  </template>
+
+  <script src="student-script.js"></script>
+</body>
+</html>
