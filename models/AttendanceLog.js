@@ -35,7 +35,7 @@ createAttendanceLogModel.schema = {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'AttendanceSession', // assuming the sessions are stored in AttendanceSession table
+      model: 'attendanceSession', // assuming the sessions are stored in AttendanceSession table
       key: 'id'
     }
   }

@@ -12,12 +12,13 @@ const LecturerCourse = require('./lecturerCourse');
 const ScannedAttendance = require('./ScannedAttendance');
 const Student = require('./student');
 const StudentCourse = require('./studentCourse');
+const createAttendanceLogModel = require('./AttendanceLog');
 
 // Initialize models
 AttendanceSession.init(AttendanceSession.schema, {sequelize});
 ActiveSession.init(ActiveSession.schema, {sequelize});
 Admin.init(Admin.schema, {sequelize});
-// createAttendanceLogModel.init(createAttendanceLogModel.schema, {sequelize});
+createAttendanceLogModel.init(createAttendanceLogModel.schema, {sequelize});
 AttendanceRecord.init(AttendanceRecord.schema, {sequelize});
 Course.init(Course.schema, {sequelize});
 Lecturer.init(Lecturer.schema, {sequelize});
@@ -36,10 +37,14 @@ ScannedAttendance.belongsTo(Student, {
 ScannedAttendance.belongsTo(AttendanceSession, {
   foreignKey: 'attendanceSessionId',
 });
-
+// ----------------------------------------------------------
 AttendanceSession.belongsTo(Course, { 
   foreignKey: 'courseId', 
-  as:'courses'
+  as:'courses',
+  references: {
+    model: 'courses', // match your actual table name
+    key: 'id'
+  }
 });
 AttendanceSession.hasOne(ActiveSession, {
   foreignKey: 'attendanceSessionId',
@@ -49,23 +54,46 @@ AttendanceSession.hasOne(ScannedAttendance, {
   foreignKey: 'attendanceSessionId',
   onDelete: 'CASCADE'
 });
-
+AttendanceSession.hasOne(createAttendanceLogModel, {
+  foreignKey: 'attendanceSessionId',
+  onDelete: 'CASCADE'
+});
+// ----------------------------------------------------------
 ActiveSession.belongsTo(AttendanceSession, {
   foreignKey: 'attendanceSessionId',
   targetKey: 'id',
   onDelete: 'CASCADE'
 });
-ActiveSession.belongsTo(models.Course, {
+ActiveSession.belongsTo(Course, {
   foreignKey: 'course_id',
   as:'courses'
 });
-
+// ----------------------------------------------------------
+Course.hasOne(LecturerCourse, {
+  foreignKey: 'courseId',
+  onDelete: 'CASCADE'
+});
+Lecturer.hasOne(LecturerCourse, {
+  foreignKey: 'lecturerId',
+  onDelete: 'CASCADE'
+});
+Course.hasMany(ScannedAttendance, {
+  foreignKey: 'courseId',
+  as: 'scanned_attendances',
+});
+// ----------------------------------------------------------
+Student.hasMany(ScannedAttendance, {
+  foreignKey: 'studentId',
+  as: 'ScannedAttendances',
+});
+// ----------------------------------------------------------
+// ----------------------------------------------------------
 const models = {
   sequelize,
   AttendanceSession,
   ActiveSession,
   Admin,
-  // createAttendanceLogModel,
+  createAttendanceLogModel,
   AttendanceRecord,
   Course,
   Lecturer,

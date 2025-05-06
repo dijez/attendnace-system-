@@ -64,17 +64,6 @@ AttendanceSession.init(AttendanceSession.schema, {
   timestamps: true,
   freezeTableName: true,
 })
-// AttendanceSession.hasMany(ScannedAttendance, {
-//   foreignKey: 'attendanceSessionId'
-// });
-// AttendanceSession.belongsTo(Course, {
-//   foreignKey: 'course_id', // This matches the column in your table
-//   as: 'course',
-//   references: {
-//     model: 'courses', // match your actual table name
-//     key: 'id'
-//   }
-// });
 
 
 module.exports = AttendanceSession;

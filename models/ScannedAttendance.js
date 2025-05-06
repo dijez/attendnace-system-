@@ -53,7 +53,7 @@ ScannedAttendance.schema = {
     allowNull: false,
     references: {
       model: 'attendanceSession',
-      // key: 'id',
+      key: 'id',
     },
   },
 }
