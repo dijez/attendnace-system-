@@ -1,48 +1,46 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Import database connection
 const AttendanceSession = require('./AttendanceSession')
 
-const ActiveSession = sequelize.define('ActiveSession', {
-          isActive: {
-        type: DataTypes.BOOLEAN,
-        defaultValue: false
-      },
+class ActiveSession extends Model {}
+
+ActiveSession.schema = {
+  id: {
+    type: DataTypes.INTEGER,
+    primaryKey: true,
+    autoIncrement: true
+  },
+  isActive: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
   course_id: {
     type: DataTypes.INTEGER,
     allowNull: false,
-    field: 'course_id' ,
+    field: 'course_id',
     references: {
-        model: 'courses',
-        key: 'id'
-      }
+      model: 'courses',
+      key: 'id'
+    }
   },
-
   attendanceSessionId: {
     type: DataTypes.INTEGER,
     allowNull: false,
     references: {
-      model: 'attendanceSession', 
+      model: 'attendanceSession',
       key: 'id',
     },
   }
-    
-}, {
-    tableName: 'ActiveSession',
-    timestamps: false, 
-    freezeTableName: true,
-  });
+}
 
-  ActiveSession.associate = (models) => {
-    ActiveSession.belongsTo(AttendanceSession, {
-      foreignKey: 'attendanceSessionId',
-      targetKey: 'id',
-      onDelete: 'CASCADE'
-    });
-    ActiveSession.belongsTo(models.Course, {
-      foreignKey: 'course_id',
-      as:'courses'
-    });
-  };
-  
+ActiveSession.init(ActiveSession.schema, {
+  sequelize,
+  modelName: 'ActiveSession',
+  tableName: 'ActiveSession',
+  timestamps: false,
+  freezeTableName: true,
+})
+
+
 
 module.exports = ActiveSession;

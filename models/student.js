@@ -1,24 +1,44 @@
-const { Sequelize, DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 
 const sequelize = require('../config/db');
 const ScannedAttendance = require('./ScannedAttendance')
 
-const Student = sequelize.define('Student', {
-    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
-    username: { type: DataTypes.STRING, allowNull: false },
-    email: { type: DataTypes.STRING, allowNull: false, unique: true },
-    password: { type: DataTypes.STRING, allowNull: false },
-}, {
-    tableName: 'students',
-    timestamps: true
+class Student extends Model {}
 
-});
-Student.associate = (models) => {
-    Student.hasMany(models.ScannedAttendance, {
-      foreignKey: 'studentId',
-      as: 'ScannedAttendances',
-    });
-  };
+Student.schema = {
+  id: { 
+    type: DataTypes.INTEGER, 
+    autoIncrement: true, 
+    primaryKey: true 
+  },
+  username: { 
+    type: DataTypes.STRING, 
+    allowNull: false 
+  },
+  email: { 
+    type: DataTypes.STRING, 
+    allowNull: false, 
+    unique: true 
+  },
+  password: { 
+    type: DataTypes.STRING, 
+    allowNull: false 
+  },
+}
+
+Student.init(Student.schema, {
+  sequelize,
+  modelName: "Student",
+  tableName: 'students',
+  timestamps: true
+})
+
+// Student.associate = ( ) => {
+//     Student.hasMany(models.ScannedAttendance, {
+//       foreignKey: 'studentId',
+//       as: 'ScannedAttendances',
+//     });
+//   };
     
 
 module.exports = Student;

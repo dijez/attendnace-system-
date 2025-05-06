@@ -1,8 +1,11 @@
-const { DataTypes } = require('sequelize');
+const { Model, DataTypes } = require('sequelize');
 const sequelize = require('../config/db'); // Import database connection
 const ActiveSession = require('./ActiveSession')
 const AttendanceSession = require('./AttendanceSession')
-const Course = sequelize.define('Course', {
+
+class Course extends Model {}
+
+Course.schema = {
     id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
@@ -17,24 +20,16 @@ const Course = sequelize.define('Course', {
         allowNull: false,
         unique: true // Ensures course codes are unique
     }
-}, {
+}
+
+Course.init(Course.schema, {
+    sequelize,
+    modelName: 'Course',
     tableName: 'courses',
     timestamps: false, // Enables createdAt and updatedAt
-});
-
-
-
-Course.associate = (models) => {
-      Course.hasMany(ActiveSession, {
-          foreignKey: 'courseId',
-          as: 'ActiveSession'
-        });
-        Course.hasMany(AttendanceSession, {
-          foreignKey: 'course_id',
-          as: 'attendance_sessions'
-        });
-        
+})
+ 
    
-  };
+//   };
  
 module.exports = Course;

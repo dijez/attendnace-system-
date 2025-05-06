@@ -11,4 +11,4 @@ sequelize.authenticate()
     .catch(err => console.error('Error connecting to DB:', err));
 
 
-    module.exports = sequelize;
+module.exports = sequelize;
