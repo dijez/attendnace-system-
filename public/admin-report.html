@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Attendance Report</title>
+  <style>
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    th {
+      background-color: #f4f4f4;
+    }
+  </style>
+</head>
+<body>
+  <h2>Attendance Report</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Student Username</th>
+        <th>Course Code</th>
+        <th>Time Marked</th>
+      </tr>
+    </thead>
+    <tbody id="attendance-body">
+      <!-- Data goes here -->
+    </tbody>
+  </table>
+
+  <script >
+    document.addEventListener('DOMContentLoaded', () => {
+  fetch('/api/admin/attendance-report')
+    .then(response => response.json())
+    .then(data => {
+      const tbody = document.getElementById('attendance-body');
+
+      if (data.success && data.data.length > 0) {
+        data.data.forEach(record => {
+          const row = document.createElement('tr');
+
+          row.innerHTML = `
+            <td>${record.username}</td>
+            <td>${record.courseCode}</td>
+            <td>${new Date(record.createdAt).toLocaleString()}</td>
+          `;
+
+          tbody.appendChild(row);
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="3">No records found.</td></tr>';
+      }
+    })
+    .catch(error => {
+      console.error('Error loading report:', error);
+    });
+});
+
+
+  </script>
+</body>
+</html>
