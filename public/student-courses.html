@@ -3,7 +3,110 @@
 <head>
   <meta charset="UTF-8">
   <title>My Courses</title>
-  <link rel="stylesheet" href="./student.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    body {
+      background-color: #f4f6f9;
+      color: #2c3e50;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+
+    .my-courses-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+
+    .my-courses-header h2 {
+      font-size: 2rem;
+      color: #2c3e50;
+    }
+
+    .refresh-btn {
+      background-color: #3498db;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .refresh-btn:hover {
+      background-color: #2980b9;
+    }
+
+    #my-registered-courses {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .course-box {
+      background-color: white;
+      padding: 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .course-title {
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+
+    .course-status {
+      font-size: 1rem;
+      color: #7f8c8d;
+    }
+
+    .scan-btn {
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      font-size: 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+
+    .scan-btn:hover {
+      background-color: #27ae60;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      body {
+        padding: 1rem;
+      }
+
+      .my-courses-header h2 {
+        font-size: 1.5rem;
+      }
+
+      .course-box {
+        padding: 1rem;
+      }
+
+      .refresh-btn {
+        padding: 0.5rem 1rem;
+        font-size: 0.9rem;
+      }
+    }
+
+  </style>
 </head>
 <body>
   <div class="my-courses-header">

@@ -1,143 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard</title>
-   
-    <style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Student Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', sans-serif;
+    }
 
-      /* Reset Styles */
+    body {
+      background-color: #f4f6f9;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
 
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
+    /* Top Navigation Bar */
+    .navbar {
+      background-color: #1f2d3d;
+      color: white;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
+      flex-wrap: wrap;
+    }
 
-/* Full Page Background */
-body {
-    /* background: url('background.jpeg') no-repeat center center/cover; */
-    height: 100vh;
-    display: flex;
-}
+    .navbar h2 {
+      font-size: 1.5rem;
+    }
 
-/* Sidebar Navigation */
-.sidebar {
-    width: 250px;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 20px;
-    position: fixed;
-}
+    .navbar ul {
+      display: flex;
+      list-style: none;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
 
-.sidebar h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
+    .navbar ul li {
+      display: inline;
+    }
 
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
+    .navbar ul li a {
+      text-decoration: none;
+      color: white;
+      padding: 0.5rem 0.75rem;
+      border-radius: 5px;
+      transition: background 0.3s ease;
+    }
 
-.sidebar ul li {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-}
+    .navbar ul li a:hover {
+      background-color: #2e4157;
+    }
 
-.sidebar ul li a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    padding: 10px;
-    transition: 0.3s;
-}
+    .logout a {
+      background-color: #e74c3c;
+    }
 
-.sidebar ul li a:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-}
+    .logout a:hover {
+      background-color: #c0392b;
+    }
 
-/* Logout Styling */
-#logout a {
-    background: red;
-    text-align: center;
-    display: block;
-    padding: 10px;
-    border-radius: 5px;
-}
+    /* Content Area */
+    .content {
+      padding: 2rem;
+      color: #2c3e50;
+      flex-grow: 1;
+    }
 
-#logout a:hover {
-    background: darkred;
-}
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
 
-/* Main Content */
-.content {
-    margin-left: 270px;
-    padding: 50px;
-    color: white;
-    text-shadow: 1px 1px 3px black;
-}
+    p {
+      margin-bottom: 2rem;
+      color: #555;
+    }
 
-h1 {
-    font-size: 36px;
-}
+    h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+    }
 
-p {
-    font-size: 18px;
-}
-#registered-courses {
-    margin-top: 20px;
-    list-style-type: none;
-    padding: 0;
-}
+    #registered-courses {
+      list-style-type: none;
+      padding: 0;
+    }
 
-#registered-courses li {
-    background: rgba(255, 255, 255, 0.1);
-    padding: 10px 15px;
-    margin: 8px 0;
-    border-left: 4px solid #00c3ff;
-    border-radius: 5px;
-    font-size: 16px;
-}
+    #registered-courses li {
+      background-color: #ecf0f1;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.8rem;
+      border-left: 4px solid #3498db;
+      border-radius: 5px;
+      color: #34495e;
+    }
 
+    @media (max-width: 768px) {
+      .navbar {
+        flex-direction: column;
+        align-items: flex-start;
+      }
 
-    </style>
+      .navbar ul {
+        flex-direction: column;
+        width: 100%;
+        gap: 0;
+      }
+
+      .navbar ul li a {
+        display: block;
+        width: 100%;
+        padding: 10px;
+      }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Sidebar -->
-        <nav class="sidebar">
-            <h2>student Panel</h2>
-            <ul>
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="./student-register-course.html">register course</a></li>
-                <li><a href="./student-courses.html">My Courses</a></li>
-                <li><a href="#">Take Attendance</a></li>
-                <li><a href="#">View Attendance</a></li>
-                <li><a href="#">View Profile</a></li>
-                <li id="logout"><a href="./student-dashboard.html">Logout</a></li>
-            </ul>
-        </nav>
 
+  <!-- Top Navbar -->
+  <nav class="navbar">
+    <h2>Student Panel</h2>
+    <ul>
+      <li><a href="./student-dashboard.html">Dashboard</a></li>
+      <li><a href="./student-register-course.html">Register Course</a></li>
+      <li><a href="./student-courses.html">Scan My Courses</a></li>
+      <!-- <li><a href="./student-scan-qrcode.html">Scan My Attendance</a></li> -->
+      <li><a href="#">View Attendance</a></li>
+      <!-- <li><a href="#">View Profile</a></li> -->
+      <li class="logout" ><a href="./student-login.html">Logout</a></li>
+    </ul>
+  </nav>
 
-        <!-- Main Content -->
-        <main class="content">
-            <h1>Welcome to Your Dashboard</h1>
-            <p>Manage students, staff, and attendance easily from here.</p>
-            <h2>Registered Courses</h2>
-            <ul id="registered-courses">
-              
-            </ul>
-            
-          </main>
-        </div>
+  <!-- Main Content -->
+  <main class="content">
+    <h1>Welcome to Your Dashboard</h1>
 
-        
-        <script src="student-script.js"></script>
+    <h2>Registered Courses</h2>
+    <ul id="registered-courses">
+      <!-- JS will inject items here -->
+    </ul>
+  </main>
+
+  <script src="student-script.js"></script>
 </body>
 </html>
