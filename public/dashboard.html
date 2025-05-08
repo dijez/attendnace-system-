@@ -6,95 +6,128 @@
     <title>Dashboard</title>
     <!-- <link rel="stylesheet" href="styles.css"> -->
     <style>
-      /* Reset Styles */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: Arial, sans-serif;
-}
-
-/* Full Page Background */
-body {
-    /* background: url('background.jpeg') no-repeat center center/cover; */
-    height: 100vh;
-    display: flex;
-}
-
-/* Sidebar Navigation */
-.sidebar {
-    width: 250px;
-    height: 100vh;
-    background: rgba(0, 0, 0, 0.8);
-    color: white;
-    padding: 20px;
-    position: fixed;
-}
-
-.sidebar h2 {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.sidebar ul {
-    list-style: none;
-    padding: 0;
-}
-
-.sidebar ul li {
-    padding: 10px;
-    margin: 5px 0;
-    border-radius: 5px;
-}
-
-.sidebar ul li a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    padding: 10px;
-    transition: 0.3s;
-}
-
-.sidebar ul li a:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
-}
-
-/* Logout Styling */
-#logout a {
-    background: red;
-    text-align: center;
-    display: block;
-    padding: 10px;
-    border-radius: 5px;
-}
-
-#logout a:hover {
-    background: darkred;
-}
-
-/* Main Content */
-.content {
-    margin-left: 270px;
-    padding: 50px;
-    color: white;
-    text-shadow: 1px 1px 3px black;
-}
-
-h1 {
-    font-size: 36px;
-}
-
-p {
-    font-size: 18px;
-}
-
-    </style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Segoe UI', sans-serif;
+        }
+        .logout a {
+      background-color: #e74c3c;
+    }
+        body {
+          background-color: #f4f6f9;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+    
+        /* Top Navigation Bar */
+        .navbar {
+          background-color: #1f2d3d;
+          color: white;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 2rem;
+          flex-wrap: wrap;
+        }
+    
+        .navbar h2 {
+          font-size: 1.5rem;
+        }
+    
+        .navbar ul {
+          display: flex;
+          list-style: none;
+          gap: 1rem;
+          flex-wrap: wrap;
+        }
+    
+        .navbar ul li {
+          display: inline;
+        }
+    
+        .navbar ul li a {
+          text-decoration: none;
+          color: white;
+          padding: 0.5rem 0.75rem;
+          border-radius: 5px;
+          transition: background 0.3s ease;
+        }
+    
+        .navbar ul li a:hover {
+          background-color: #2e4157;
+        }
+    
+        .logout a {
+          background-color: #e74c3c;
+        }
+    
+        .logout a:hover {
+          background-color: #c0392b;
+        }
+    
+        /* Content Area */
+        .content {
+          padding: 2rem;
+          color: #2c3e50;
+          flex-grow: 1;
+        }
+    
+        h1 {
+          font-size: 2rem;
+          margin-bottom: 1rem;
+        }
+    
+        p {
+          margin-bottom: 2rem;
+          color: #555;
+        }
+    
+        h2 {
+          font-size: 1.3rem;
+          margin-bottom: 1rem;
+        }
+    
+        #registered-courses {
+          list-style-type: none;
+          padding: 0;
+        }
+    
+        #registered-courses li {
+          background-color: #ecf0f1;
+          padding: 0.75rem 1rem;
+          margin-bottom: 0.8rem;
+          border-left: 4px solid #3498db;
+          border-radius: 5px;
+          color: #34495e;
+        }
+    
+        @media (max-width: 768px) {
+          .navbar {
+            flex-direction: column;
+            align-items: flex-start;
+          }
+    
+          .navbar ul {
+            flex-direction: column;
+            width: 100%;
+            gap: 0;
+          }
+    
+          .navbar ul li a {
+            display: block;
+            width: 100%;
+            padding: 10px;
+          }
+        }
+      </style>
 </head>
 <body>
     <div class="container">
         <!-- Sidebar -->
-        <nav class="sidebar">
+        <nav class="navbar">
             <h2>Admin Panel</h2>
             <ul>
                 <li><a href="dashboard.html">Dashboard</a></li>
@@ -102,15 +135,15 @@ p {
                 <li><a href="admin-manage-lecturer.html">Manage Staff</a></li>
                 <li><a href="admin-assign-lecturer.html">Assign lecturer</a></li>
                 <li><a href="./admin-add-course.html">Add Courses</a></li>
-                <li><a href="#">View Profile</a></li>
-                <li id="logout"><a href="#">Logout</a></li>
+                <li><a href="./admin-report.html">View Attendance</a></li>
+                <li id="logout" class="logout"><a href="./index.html">Logout</a></li>
             </ul>
         </nav>
 
         <!-- Main Content -->
         <main class="content">
             <h1>Welcome to Your Dashboard</h1>
-            <p>Manage students, staff, and attendance easily from here.</p>
+           
           </main>
         </div>
         
