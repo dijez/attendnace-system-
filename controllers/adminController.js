@@ -3,11 +3,14 @@ const Admin = require('../models/admin');
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const LecturerCourse = require('../models/lecturerCourse.js')
+const ScannedAttendance = require('../models/ScannedAttendance.js')
+const AttendanceSession = require('../models/AttendanceSession.js')
 const router = express.Router();
 const Course = require('../models/courses.js')
+const Student = require('../models/student.js')
 // const createAttendanceLogModel = require('../models/AttendanceLog.js');
 const sequelize = require('../config/db.js');
-
+const verifyToken = require('../middleware/authMiddleware.js'); 
 
 
 // ✅ Admin Registration Route
@@ -116,20 +119,22 @@ router.post('/add-course', async (req, res) => {
     res.status(201).json({ message: "Course added successfully!" });
 
 
-//     // Then dynamically create a report table
-// const formattedTableName = `report_${courseCode.replace(/\s+/g, '_').toLowerCase()}`;
+    // Then dynamically create a report table
+//     const formattedTableName = `attendance_log_course_${courseCode.replace(/\s+/g, '_').toLowerCase()}`;
 
-// await sequelize.query(`
-//   CREATE TABLE IF NOT EXISTS ${formattedTableName} (
-//     id SERIAL PRIMARY KEY,
-//     studentId INTEGER,
-//     username VARCHAR(255) NOT NULL,
-//     attendanceSessionId INTEGER,
-//     courseId INTEGER,
-//     courseCode VARCHAR(50),
-//     scannedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-//   )
-// `);
+//     await sequelize.query(`
+//       CREATE TABLE IF NOT EXISTS ${formattedTableName} (
+//         id SERIAL PRIMARY KEY,
+//         studentId INTEGER,
+//         username VARCHAR(255) NOT NULL,
+//         attendanceSessionId INTEGER,
+//         courseId INTEGER,
+//         courseCode VARCHAR(50),
+//         scannedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+//         status VARCHAR(50)
+//       )
+//     `);
+    
 
 //  res.send(`
 //       <script>
@@ -147,5 +152,30 @@ router.post('/add-course', async (req, res) => {
 
 
 
+router.get('/attendance-report', async (req, res) => {
+  try {
+    const attendanceData = await ScannedAttendance.findAll({
+      include: [
+        { model: Student, as: 'students', attributes: ['username'] }, // no alias needed
+        { model: Course, as: 'courses', attributes: ['course_code'] } // alias must match association
+      ],
+      attributes: ['createdAt'],
+      order: [['createdAt', 'DESC']]
+
+      
+    });
+    console.log("Fetched records:", attendanceData);
+    const formattedData = attendanceData.map(entry => ({
+      username: entry.students?.username,
+      courseCode: entry.courses?.course_code,
+      createdAt: entry.createdAt
+    }));
+    
+    res.json({ success: true, data: formattedData });
+  } catch (error) {
+    console.error('Error fetching attendance:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+});
 
 module.exports = router; // ✅ Export the router directly
