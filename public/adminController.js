@@ -156,8 +156,8 @@ router.post('/add-course', async (req, res) => {
   try {
     const attendanceData = await ScannedAttendance.findAll({
       include: [
-        { model: Student, attributes: ['username'] }, // no alias needed
-        { model: Course, as: 'course', attributes: ['courseCode'] } // alias must match association
+        { model: Student, as: 'students', attributes: ['username'] }, // no alias needed
+        { model: Course, as: 'courses', attributes: ['courseCode'] } // alias must match association
       ],
       attributes: ['createdAt'],
       order: [['createdAt', 'DESC']]

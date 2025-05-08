@@ -32,10 +32,14 @@ StudentCourse.init(StudentCourse.schema, {sequelize});
 // Set up associations here
 ScannedAttendance.belongsTo(Student, {
   foreignKey: 'studentId',
-  as: "Student",
+  as: "students",
 });
 ScannedAttendance.belongsTo(AttendanceSession, {
   foreignKey: 'attendanceSessionId',
+});
+ScannedAttendance.belongsTo(Course, {
+  foreignKey: 'courseId',
+  as: 'courses',
 });
 // ----------------------------------------------------------
 AttendanceSession.belongsTo(Course, { 
@@ -84,7 +88,7 @@ Course.hasMany(ScannedAttendance, {
 // ----------------------------------------------------------
 Student.hasMany(ScannedAttendance, {
   foreignKey: 'studentId',
-  as: 'ScannedAttendances',
+  as: 'scannedAttendances',
 });
 // ----------------------------------------------------------
 // ----------------------------------------------------------
