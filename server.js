@@ -1,8 +1,7 @@
 require('dotenv').config();
 const express = require('express');
 const path = require('path');
-const sequelize = require('./config/db');
-const db = require('./models');
+const sequelize = require('./config/db.js');
 const cors = require('cors');
 const QRCode = require('qrcode');
 const jwt = require('jsonwebtoken');
@@ -17,23 +16,23 @@ const AttendanceSession = require('./models/AttendanceSession.js'); // Adjust th
 const AttendanceRecord = require('./models/AttendanceRecord'); // Adjust the path as needed
 const ScannedAttendance = require('./models/ScannedAttendance.js'); // Adjust the path as needed
 
-// AttendanceSession.hasMany(AttendanceRecord, { foreignKey: 'session_id' });
-// AttendanceRecord.belongsTo(AttendanceSession, { foreignKey: 'session_id' });
+AttendanceSession.hasMany(AttendanceRecord, { foreignKey: 'session_id' });
+AttendanceRecord.belongsTo(AttendanceSession, { foreignKey: 'session_id' });
 
-// // A lecturer can teach many courses
-// Lecturer.belongsToMany(Course, { through: LecturerCourse, foreignKey: 'lecturerId' });
+// A lecturer can teach many courses
+Lecturer.belongsToMany(Course, { through: LecturerCourse, foreignKey: 'lecturerId' });
 
-// // A course can have many lecturers
-// Course.belongsToMany(Lecturer, { through: LecturerCourse, foreignKey: 'courseId' });
+// A course can have many lecturers
+Course.belongsToMany(Lecturer, { through: LecturerCourse, foreignKey: 'courseId' });
 
-// // models/student.js
-// Student.belongsToMany(Course, { through: StudentCourse ,foreignKey: 'studentId', otherKey: 'courseId', });
+// models/student.js
+Student.belongsToMany(Course, { through: StudentCourse ,foreignKey: 'studentId', otherKey: 'courseId', });
 
-// // models/course.js
-// Course.belongsToMany(Student, { through: StudentCourse , foreignKey: 'courseId',  otherKey: 'studentId',});
+// models/course.js
+Course.belongsToMany(Student, { through: StudentCourse , foreignKey: 'courseId',  otherKey: 'studentId',});
 
-// // if (Student.associate) Student.associate({ ScannedAttendance });
-// if (ScannedAttendance.associate) ScannedAttendance.associate({ Student, AttendanceSession });
+if (Student.associate) Student.associate({ ScannedAttendance });
+if (ScannedAttendance.associate) ScannedAttendance.associate({ Student, AttendanceSession });
 
 
 
@@ -120,7 +119,7 @@ app.use('/api/lecturer', lecturerRoutes);
 app.use('/api/student', studentRoutes);
 
 // ✅ Sync Database
-db.sequelize.sync()
+sequelize.sync()
     .then(() => console.log("Database Synced"))
     .catch(err => console.error("DB Sync Error:", err));
 

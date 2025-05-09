@@ -157,7 +157,7 @@ router.get('/attendance-report', async (req, res) => {
     const attendanceData = await ScannedAttendance.findAll({
       include: [
         { model: Student, as: 'students', attributes: ['username'] }, // no alias needed
-        { model: Course, as: 'courses', attributes: ['course_code'] } // alias must match association
+        { model: Course, as: 'courses', attributes: ['courseCode'] } // alias must match association
       ],
       attributes: ['createdAt'],
       order: [['createdAt', 'DESC']]
@@ -166,8 +166,8 @@ router.get('/attendance-report', async (req, res) => {
     });
     console.log("Fetched records:", attendanceData);
     const formattedData = attendanceData.map(entry => ({
-      username: entry.students?.username,
-      courseCode: entry.courses?.course_code,
+      username: entry.Student?.username,
+      courseCode: entry.course?.courseCode,
       createdAt: entry.createdAt
     }));
     
