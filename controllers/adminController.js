@@ -69,13 +69,21 @@ router.post('/assign-lecturer', async (req, res) => {
   console.log('request body ', req.body)
   const { lecturerId, courseId,courseCode,course_name } = req.body;
   
-  // Validate input
-  if (!lecturerId || !courseId || !courseCode || !course_name) {
-    return res.status(400).json({ message: 'All fields required' });
+  const course = await Course.findOne({ where: { id: courseId } });
+
+  // // Validate input
+  // if (!lecturerId || !courseId || !courseCode || !course_name) {
+  //   return res.status(400).json({ message: 'All fields required' });
+  // }
+
+  // Check if the course exists
+  if (!course) {
+    return res.status(404).json({ message: 'Course not found' });
   }
-  
+
+
   // Check if the lecturer is already assigned
-  const existingAssignment = await LecturerCourse.findOne({ where: { lecturerId, courseId,courseCode,course_name } });
+  const existingAssignment = await LecturerCourse.findOne({ where: { lecturerId, courseId,} });
   
   if (existingAssignment) {
     return res.status(400).json({ message: 'Lecturer already assigned to this course' });
@@ -86,8 +94,8 @@ router.post('/assign-lecturer', async (req, res) => {
        const result = await LecturerCourse.create({
          lecturerId: parseInt(lecturerId), 
         courseId: parseInt(courseId),
-        courseCode, 
-        course_name });
+        courseCode: course.courseCode, 
+        course_name: course.course_name, });
 
         res.json({ message: 'Lecturer assigned successfully' });
     

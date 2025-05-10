@@ -272,7 +272,7 @@ const newSession = await ActiveSession.create({
 
 
 
-router.get('reports', async (req, res) => {
+router.get('/reports', async (req, res) => {
     try {
         const report = await ScannedAttendance.findAll({
             attributes: ['id', 'username', 'course_code', 'createdAt']

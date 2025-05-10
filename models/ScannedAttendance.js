@@ -62,7 +62,7 @@ ScannedAttendance.init(ScannedAttendance.schema, {
   sequelize,
   modelName: "ScannedAttendance",
   tableName: 'ScannedAttendances',
-  timestamps: false,
+  timestamps: true,
   freezeTableName: true,
 })
 

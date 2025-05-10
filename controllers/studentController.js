@@ -245,7 +245,7 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
       courseId: courseIdFromSession,
       course_code,
       attendanceSessionId: sessionId,
-      username
+      username,
     });
 
      //  // ✅ Insert into dynamic tables
