@@ -271,19 +271,48 @@ const newSession = await ActiveSession.create({
 
 
 
+router.get('/active-deactive-display', async (req, res) => {
+  const lecturerId = req.lecturerId; // or however you store the logged-in lecturer
 
-router.get('reports', async (req, res) => {
-    try {
-        const report = await ScannedAttendance.findAll({
-            attributes: ['id', 'username', 'course_code', 'createdAt']
-        });
+  try {
+    // 1. Get all courses assigned to the lecturer
+    const assignedCourses = await LecturerCourse.findAll({
+      where: { lecturerId },
+      include: [{ model: Course }]
+    });
 
-        res.json(report);
-    } catch (error) {
-        console.error("Error fetching report:", error);
-        res.status(500).json({ message: "Error fetching report" });
-    }
+    // 2. Check which courses have active sessions
+    const activeSessions = await ActiveSession.findAll();
+    const activeCourseIds = activeSessions.map(session => session.courseId);
+
+    // 3. Build course list with active status
+    const courseList = assignedCourses.map(c => ({
+      courseId: c.Course.id,
+      courseCode: c.Course.courseCode,
+      course_name: c.Course.course_name,
+      isActive: activeCourseIds.includes(c.Course.id)
+    }));
+
+    // res.render('lecturer-dashboard', { courseStatusList });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send('Server error');
+  }
 });
+
+
+// router.get('reports', async (req, res) => {
+//     try {
+//         const report = await ScannedAttendance.findAll({
+//             attributes: ['id', 'username', 'course_code', 'createdAt']
+//         });
+
+//         res.json(report);
+//     } catch (error) {
+//         console.error("Error fetching report:", error);
+//         res.status(500).json({ message: "Error fetching report" });
+//     }
+// });
 
 
 // router.get('/report/:courseId/:sessionId', async (req, res) => {
