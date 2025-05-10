@@ -90,6 +90,28 @@ if (window.location.pathname.includes("dashboard.html")) {
   });
 }
 
+// Display registered courses on dashboard
+const dashboardCourses = document.getElementById('assignmentsTable');
+if (dashboardCourses) {
+  fetch('/api/admin/lecturer-course-assignments')
+  .then(res => res.json())
+  .then(data => {
+    console.log('Dashboard assignments:', data.assignments);
+    const tbody = document.querySelector('#assignmentsTable tbody');
+    data.assignments.forEach(item => {
+      const row = `<tr>
+        <td>${item.lecturerName}</td>
+        <td>${item.course_code}</td>
+        <td>${item.course_name}</td>
+      </tr>`;
+      tbody.innerHTML += row;
+    });
+  })
+  .catch(err => {
+    console.error('Error loading assignments:', err);
+  });
+}   
+
 // if (data.token) {
 //   localStorage.setItem('token', data.token);
 //   alert('Login successful!');
