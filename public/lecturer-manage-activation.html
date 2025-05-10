@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lecturer Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    table { width: 90%; margin: auto; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #ccc; text-align: left; }
+    .active { color: green; font-weight: bold; }
+    .inactive { color: red; font-weight: bold; }
+    button { padding: 5px 10px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2 style="text-align: center;">My Courses</h2>
+
+  <table id="courseTable">
+    <thead>
+      <tr>
+        <th>Course Code</th>
+        <th>Course Title</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <!-- Rows inserted here by JS -->
+    </tbody>
+  </table>
+
+  <script>
+    async function loadCourses() {
+      const res = await fetch('/api/lecturer/active-deactive-display'); // Backend route returns JSON
+      const data = await res.json();
+
+      const tableBody = document.querySelector('#courseTable tbody');
+      tableBody.innerHTML = '';
+
+      data.forEach(course => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+          <td>${course.courseCode}</td>
+          <td>${course.courseTitle}</td>
+          <td class="${course.isActive ? 'active' : 'inactive'}">
+            ${course.isActive ? 'Active' : 'Inactive'}
+          </td>
+          <td>
+            <button onclick="toggleStatus(${course.courseId}, ${course.isActive})">
+              ${course.isActive ? 'Deactivate' : 'Make Active'}
+            </button>
+          </td>
+        `;
+        tableBody.appendChild(row);
+      });
+    }
+
+    async function toggleStatus(courseId, isActive) {
+      const endpoint = isActive ? '/api/deactivate-session' : '/api/activate-session';
+      await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ courseId })
+      });
+
+      loadCourses(); // Refresh list after update
+    }
+
+    loadCourses();
+  </script>
+
+</body>
+</html>
