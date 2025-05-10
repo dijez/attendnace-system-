@@ -66,28 +66,38 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/assign-lecturer', async (req, res) => {
-    try {
-        const { lecturerId, courseId } = req.body;
-
-        // Validate input
-        if (!lecturerId || !courseId) {
-            return res.status(400).json({ message: 'Lecturer and Course are required' });
-        }
-
-        // Check if the lecturer is already assigned
-        const existingAssignment = await LecturerCourse.findOne({ where: { lecturerId, courseId } });
-
-        if (existingAssignment) {
-            return res.status(400).json({ message: 'Lecturer already assigned to this course' });
-        }
-
+  console.log('request body ', req.body)
+  const { lecturerId, courseId,courseCode,course_name } = req.body;
+  
+  // Validate input
+  if (!lecturerId || !courseId || !courseCode || !course_name) {
+    return res.status(400).json({ message: 'All fields required' });
+  }
+  
+  // Check if the lecturer is already assigned
+  const existingAssignment = await LecturerCourse.findOne({ where: { lecturerId, courseId,courseCode,course_name } });
+  
+  if (existingAssignment) {
+    return res.status(400).json({ message: 'Lecturer already assigned to this course' });
+  }
+  
+  try {
         // Assign lecturer to course
-        await LecturerCourse.create({ lecturerId, courseId });
+       const result = await LecturerCourse.create({
+         lecturerId: parseInt(lecturerId), 
+        courseId: parseInt(courseId),
+        courseCode, 
+        course_name });
 
         res.json({ message: 'Lecturer assigned successfully' });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: 'Internal server error' });
+    
+      }  catch (error) {
+        console.error('Error assigning lecturer:', error); // Log the error
+        // // Handle specific Sequelize errors
+        // if (error.name === 'SequelizeForeignKeyConstraintError') {
+        //     return res.status(400).json({ message: 'Foreign key constraint error: Check if lecturer and course exist' });
+        // }
+        return res.status(500).json({ message: 'Server error during assignment' });
     }
 });
 
@@ -118,6 +128,23 @@ router.post('/add-course', async (req, res) => {
     await Course.create({ course_name, courseCode });
     res.status(201).json({ message: "Course added successfully!" });
 
+
+    // Then dynamically create a report table
+    const formattedTableName = `attendance_log_course_${courseCode.replace(/\s+/g, '_').toLowerCase()}`;
+
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS ${formattedTableName} (
+        id SERIAL PRIMARY KEY,
+        
+        username VARCHAR(255) NOT NULL,
+        attendanceSessionId INTEGER,
+        
+        
+        scannedat TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+      
+    `);
+    
 
     // Then dynamically create a report table
 //     const formattedTableName = `attendance_log_course_${courseCode.replace(/\s+/g, '_').toLowerCase()}`;
@@ -151,32 +178,55 @@ router.post('/add-course', async (req, res) => {
 
 
 
+router.get('/get-attendance-report/:course_code',async (req, res) => {
+  const  courseCode  = req.params.course_code;
 
-router.get('/attendance-report', async (req, res) => {
+  if (!courseCode) {
+    return res.status(400).json({ error: 'Course code is required' });
+  }
+
+  const reportTable = `attendance_log_course_${courseCode.replace(/\s+/g, '_').toLowerCase()}`;
+
   try {
-    const attendanceData = await ScannedAttendance.findAll({
-      include: [
-        { model: Student, as: 'students', attributes: ['username'] }, // no alias needed
-        { model: Course, as: 'courses', attributes: ['courseCode'] } // alias must match association
-      ],
-      attributes: ['createdAt'],
-      order: [['createdAt', 'DESC']]
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedat DESC
+    `);
 
-      
-    });
-    console.log("Fetched records:", attendanceData);
-    const formattedData = attendanceData.map(entry => ({
-      username: entry.Student?.username,
-      courseCode: entry.course?.courseCode,
-      createdAt: entry.createdAt
-    }));
-    
-    res.json({ success: true, data: formattedData });
+    return res.status(200).json({ report: reportData });
   } catch (error) {
-    console.error('Error fetching attendance:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error('Error fetching attendance report:', error);
+    return res.status(500).json({ error: 'Failed to generate attendance report.' });
   }
 });
+
+
+// router.get('/attendance-report', async (req, res) => {
+//   try {
+//     const attendanceData = await ScannedAttendance.findAll({
+//       include: [
+//         { model: Student, as: 'students', attributes: ['username'] }, // no alias needed
+//         { model: Course, as: 'courses', attributes: ['courseCode'] } // alias must match association
+//       ],
+//       attributes: ['createdAt'],
+//       order: [['createdAt', 'DESC']]
+
+      
+//     });
+//     console.log("Fetched records:", attendanceData);
+//     const formattedData = attendanceData.map(entry => ({
+//       username: entry.Student?.username,
+//       courseCode: entry.course?.courseCode,
+//       createdAt: entry.createdAt
+//     }));
+    
+//     res.json({ success: true, data: formattedData });
+//   } catch (error) {
+//     console.error('Error fetching attendance:', error);
+//     res.status(500).json({ success: false, message: 'Internal server error' });
+//   }
+// });
 
 module.exports = router; // ✅ Export the router directly
 //
