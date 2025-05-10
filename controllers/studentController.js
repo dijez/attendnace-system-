@@ -248,7 +248,29 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
       username
     });
 
+     //  // ✅ Insert into dynamic tables
+    // //  const reportTable = `report_${course_code.replace(/\s+/g, '_').toLowerCase()}`;
+    const scanLogTable = `attendance_log_course_${course_code.replace(/\s+/g, '_').toLowerCase()}`;
 
+    console.log("Scan Log Table:", scanLogTable);
+   //  console.log("Report Table:", reportTable);
+    
+    try {
+     console.log('Inserting attendance into scanLogTable:', {
+       studentId, username, sessionId, courseIdFromSession, course_code
+     });
+      await sequelize.query(`
+        INSERT INTO ${scanLogTable} 
+          (username, attendanceSessionId, scannedat)
+        VALUES (?, ?, NOW())
+      `, {
+        replacements: [ username, sessionId,  ]
+      });
+    } catch (error) {
+     console.error('Error marking attendance in scanLogTable:', error);
+     return res.status(400).json({ error: 'Error marking attendance in scan log.' });
+   }
+   
     //  // ✅ Insert into dynamic tables
     //  const reportTable = `report_${course_code.replace(/\s+/g, '_').toLowerCase()}`;
     //  const scanLogTable = `attendance_log_course_${course_id}`;
