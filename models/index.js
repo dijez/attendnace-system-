@@ -77,13 +77,15 @@ Course.hasOne(LecturerCourse, {
   foreignKey: 'courseId',
   onDelete: 'CASCADE'
 });
-Lecturer.hasOne(LecturerCourse, {
-  foreignKey: 'lecturerId',
-  onDelete: 'CASCADE'
-});
 Course.hasMany(ScannedAttendance, {
   foreignKey: 'courseId',
   as: 'scanned_attendances',
+});
+//-----------------------------------------------------------
+
+Lecturer.hasMany(LecturerCourse, {
+  foreignKey: 'lecturerId',
+  onDelete: 'CASCADE'
 });
 // ----------------------------------------------------------
 Student.hasMany(ScannedAttendance, {
@@ -91,6 +93,11 @@ Student.hasMany(ScannedAttendance, {
   as: 'scannedAttendances',
 });
 // ----------------------------------------------------------
+LecturerCourse.belongsTo(Course, {
+   foreignKey: 'courseId' });
+   
+LecturerCourse.belongsTo(Lecturer, {
+   foreignKey: 'lecturerId' });
 // ----------------------------------------------------------
 const models = {
   sequelize,
