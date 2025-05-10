@@ -171,6 +171,10 @@ router.get('/get-active-session/:course_id', async (req, res) => {
 
 
 
+
+
+
+
 router.post('/mark-attendance', verifyToken, async (req, res) => {
   const { course_id, sessionId ,  studentLat, studentLng} = req.body;
   const studentId = req.studentId;
@@ -270,7 +274,7 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
      console.error('Error marking attendance in scanLogTable:', error);
      return res.status(400).json({ error: 'Error marking attendance in scan log.' });
    }
-   
+
     //  // ✅ Insert into dynamic tables
     //  const reportTable = `report_${course_code.replace(/\s+/g, '_').toLowerCase()}`;
     //  const scanLogTable = `attendance_log_course_${course_id}`;
