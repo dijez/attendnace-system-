@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 function assignLecturer() {
     const lecturerId = document.getElementById('lecturer-select').value;
     const courseId = document.getElementById('courseDropdown').value;
-
+    console.log(JSON.stringify({ lecturerId, courseId }));
     fetch('/api/admin/assign-lecturer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

@@ -33,7 +33,11 @@
                 <tr>
                     <td>${report.username}</td>
                     <td>${report.course_code}</td>
-                    <td>${new Date(student.createdAt).toLocaleString()}</td>
+                    <td>${new Date(report.createdAt).toLocaleString('en-US', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short'
+                        })
+                    }</td>
                 </tr>
             `).join('');
         })
