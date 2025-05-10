@@ -4,64 +4,179 @@
   <meta charset="UTF-8">
   <title>Attendance Report</title>
   <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #444;
+      margin-bottom: 30px;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    input[type="text"] {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      width: 100%;
+      max-width: 400px;
+      font-size: 16px;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      width: 100%;
+      max-width: 200px;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 20px;
+      margin-top: 30px;
+      background-color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
     }
+
     th, td {
-      border: 1px solid #ccc;
-      padding: 8px;
+      padding: 14px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      word-break: break-word;
     }
+
     th {
-      background-color: #f4f4f4;
+      background-color: #f2f2f2;
+      color: #555;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    #reportContainer {
+      margin-top: 20px;
+      overflow-x: auto;
+    }
+
+    p {
+      text-align: center;
+      font-size: 16px;
+    }
+
+    p[style*="color:red"] {
+      color: #e74c3c;
+    }
+
+    @media (max-width: 600px) {
+      th, td {
+        padding: 10px;
+        font-size: 14px;
+      }
+
+      button {
+        font-size: 14px;
+        padding: 10px;
+      }
+
+      input[type="text"] {
+        font-size: 14px;
+        padding: 10px;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Attendance Report</h2>
-  <table>
-    <thead>
-      <tr>
-        <th>Student Username</th>
-        <th>Course Code</th>
-        <th>Time Marked</th>
-      </tr>
-    </thead>
-    <tbody id="attendance-body">
-      <!-- Data goes here -->
-    </tbody>
-  </table>
 
-  <script >
-    document.addEventListener('DOMContentLoaded', () => {
-  fetch('/api/admin/attendance-report')
-    .then(response => response.json())
-    .then(data => {
-      const tbody = document.getElementById('attendance-body');
+  <h2>Generate Attendance Report</h2>
+  <form action="/api/admin/get-attendance-report" method="POST">
+    <!-- <input type="text" name="courseCode" id="courseCode" /> -->
+    <input type="text" name="courseCode" id="courseCodeInput" placeholder="Enter course code (e.g. PHY 101)">
+  </form>
+  <button onclick="fetchReport()">Generate Report</button>
+  
 
-      if (data.success && data.data.length > 0) {
-        data.data.forEach(record => {
-          const row = document.createElement('tr');
+  <div id="reportContainer"></div>
 
-          row.innerHTML = `
-            <td>${record.username}</td>
-            <td>${record.courseCode}</td>
-            <td>${new Date(record.createdAt).toLocaleString()}</td>
-          `;
-
-          tbody.appendChild(row);
-        });
-      } else {
-        tbody.innerHTML = '<tr><td colspan="3">No records found.</td></tr>';
+  <script>
+    async function fetchReport() {
+      const courseCode = document.getElementById('courseCodeInput').value.trim();
+      if (!courseCode) {
+        alert("Please enter a course code.");
+        return;
       }
-    })
-    .catch(error => {
-      console.error('Error loading report:', error);
-    });
-});
 
+      const formattedCourseCode = courseCode.replace(/\s+/g, '_').toLowerCase();
+  
+  try {
+    const res = await fetch(`/api/admin/get-attendance-report/${formattedCourseCode}`, {
+          method: 'GET',
+  // headers: { 'Content-Type': 'application/json' },
+  // body: JSON.stringify({ courseCode })
+        }
 
+        );
+        const data = await res.json();
+
+        if (res.ok) {
+          displayReport(data.report);
+        } else {
+          document.getElementById('reportContainer').innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+      } catch (err) {
+        console.error('Error fetching report:', err);
+        document.getElementById('reportContainer').innerHTML = `<p style="color:red;">Server error.</p>`;
+      }
+    }
+
+    function displayReport(reportData) {
+      if (!reportData.length) {
+        document.getElementById('reportContainer').innerHTML = "<p>No records found.</p>";
+        return;
+      }
+
+      let html = `<table>
+        <tr>
+          <th>Username</th>
+          <th>Session ID</th>
+          <th>Scanned At</th>
+        </tr>`;
+
+      reportData.forEach(row => {
+        html += `<tr>
+          <td>${row.username}</td>
+          <td>${row.attendancesessionid}</td>
+          <td>${new Date(row.scannedat).toLocaleString()}</td>
+        </tr>`;
+      });
+
+      html += "</table>";
+      document.getElementById('reportContainer').innerHTML = html;
+    }
   </script>
+
 </body>
 </html>
