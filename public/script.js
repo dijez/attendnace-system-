@@ -110,7 +110,7 @@ if (dashboardCourses) {
   .catch(err => {
     console.error('Error loading assignments:', err);
   });
-}   
+}  
 
 // if (data.token) {
 //   localStorage.setItem('token', data.token);
