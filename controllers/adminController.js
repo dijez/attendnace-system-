@@ -210,6 +210,32 @@ router.get('/get-attendance-report/:course_code',async (req, res) => {
 });
 
 
+
+
+
+router.get('/lecturer-course-assignments', async (req, res) => {
+  try {
+    const assignments = await LecturerCourse.findAll({
+      include: [
+        {
+          model: Lecturer,
+          attributes: ['username']  
+        },
+        {
+          model: Course,
+          attributes: ['courseCode', 'course_name']  // Get course code and ID
+        }
+      ]
+    });
+    res.json(assignments);  // Return the assignments as JSON
+  } catch (error) {
+    console.error('Error fetching assignments:', error);
+    res.status(500).json({ message: 'Server error while fetching assignments' });
+  }
+});
+
+
+
 // router.get('/attendance-report', async (req, res) => {
 //   try {
 //     const attendanceData = await ScannedAttendance.findAll({
