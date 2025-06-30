@@ -81,7 +81,7 @@ router.post('/login', async (req, res) => {
 
 router.get('/courses',verifyToken, async (req, res) => {
   try {
-      console.log("✅ /api/lecturer/courses endpoint hit"); 
+      console.log(" /api/lecturer/courses endpoint hit"); 
       console.log("Lecturer ID from token:", req.lecturerId);
 
         const lecturer = await Lecturer.findByPk(req.lecturerId, {
@@ -270,35 +270,197 @@ const newSession = await ActiveSession.create({
 });
 
 
-
-router.get('/active-deactive-display', async (req, res) => {
-  const lecturerId = req.lecturerId; // or however you store the logged-in lecturer
-
+router.post('/deactivate-session', verifyToken, async (req, res) => {
+  const { courseId } = req.body;
   try {
-    // 1. Get all courses assigned to the lecturer
-    const assignedCourses = await LecturerCourse.findAll({
-      where: { lecturerId },
-      include: [{ model: Course }]
+    const activeSession = await ActiveSession.findOne({
+      where: { course_id: courseId, isActive: true }
     });
 
-    // 2. Check which courses have active sessions
-    const activeSessions = await ActiveSession.findAll();
-    const activeCourseIds = activeSessions.map(session => session.courseId);
+    if (!activeSession) {
+      return res.status(404).json({ message: 'No active session found.' });
+    }
 
-    // 3. Build course list with active status
-    const courseList = assignedCourses.map(c => ({
-      courseId: c.Course.id,
-      courseCode: c.Course.courseCode,
-      course_name: c.Course.course_name,
-      isActive: activeCourseIds.includes(c.Course.id)
-    }));
+    activeSession.isActive = false;
+    await activeSession.save();
 
-    // res.render('lecturer-dashboard', { courseStatusList });
+    res.json({ message: 'Session deactivated.' });
   } catch (err) {
-    console.error(err);
-    res.status(500).send('Server error');
+    console.error('Error deactivating session:', err);
+    res.status(500).json({ message: 'Server error' });
   }
 });
+
+
+
+
+router.get('/get-attendance-report/:course_code',verifyToken, async (req, res) => {
+  const courseCode = req.params.course_code;
+  const lecturerId = req.lecturerId; // Make sure JWT middleware sets req.user
+
+  if (!courseCode) {
+    return res.status(400).json({ error: 'Course code is required' });
+  }
+
+  const formattedCode = courseCode.replace(/\s+/g, '_').toLowerCase();
+  const reportTable = `attendance_log_course_${formattedCode}`;
+
+  try {
+    // Check if this course is assigned to the lecturer
+    const [courseMatch] = await sequelize.query(`
+      SELECT lc."courseId", c."courseCode"
+      FROM "LecturerCourse" lc
+      JOIN courses c ON lc."courseId" = c.id
+      WHERE lc."lecturerId" = :lecturerId AND LOWER(REPLACE(c."courseCode", ' ', '_')) = :formattedCode
+    `, {
+      replacements: { lecturerId, formattedCode },
+    });
+
+    if (!courseMatch.length) {
+      return res.status(403).json({ error: 'Unauthorized. You are not assigned to this course.' });
+    }
+
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedAt DESC
+    `);
+
+    return res.status(200).json({ report: reportData });
+
+  } catch (error) {
+    console.error('Error fetching attendance report:', error);
+    return res.status(500).json({ error: 'Failed to generate attendance report.' });
+  }
+});
+
+
+
+router.get('/export-attendance-csv/:course_code', async (req, res) => {
+  const courseCode = req.params.course_code;
+  const reportTable = `attendance_log_course_${courseCode}`;
+
+  try {
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedAt DESC
+    `);
+
+
+     // Ensure the exports directory exists
+     const exportDir = path.join(__dirname, '..', 'exports');
+     if (!fs.existsSync(exportDir)) {
+       fs.mkdirSync(exportDir);
+     }
+
+    const filename = `attendance_${courseCode}_${Date.now()}.csv`;
+    const filePath = path.join(__dirname, '..', 'exports', filename);
+    const fileStream = fs.createWriteStream(filePath);
+
+    // Write CSV headers + data
+    writeToStream(fileStream, reportData, {
+      headers: true,
+      writeHeaders: true
+    })
+    .on('finish', () => {
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error('Download error:', err);
+          res.status(500).send('Download failed.');
+        } else {
+          // Optional: delete after download
+          fs.unlink(filePath, () => {});
+        }
+      });
+    })
+    .on('error', (err) => {
+      console.error('CSV Write Error:', err);
+      res.status(500).send('Failed to write CSV.');
+    });
+
+
+  } catch (error) {
+    console.error('CSV Export Error:', error);
+    res.status(500).send('Failed to export CSV.');
+  }
+});
+
+
+
+
+
+
+router.get('/export-attendance-pdf/:course_code', async (req, res) => {
+  const courseCode = req.params.course_code;
+  const reportTable = `attendance_log_course_${courseCode}`;
+
+  try {
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedAt DESC
+    `);
+
+    const doc = new PDFDocument();
+    const filename = `attendance_${courseCode}_${Date.now()}.pdf`;
+
+    res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-type', 'application/pdf');
+
+    doc.pipe(res);
+    doc.fontSize(18).text(`Attendance Report: ${courseCode}`, { align: 'center' }).moveDown();
+
+    reportData.forEach((entry, i) => {
+      doc.fontSize(12).text(
+        `${i + 1}. ${entry.username} | Session ID: ${entry.attendancesessionid} | Time: ${new Date(entry.scannedat).toLocaleString()}`
+      );
+    });
+    
+    doc.end();
+  } catch (error) {
+    console.error('PDF Export Error:', error);
+    res.status(500).send('Failed to export PDF.');
+  }
+});
+
+
+// router.get('/active-deactive-display',verifyToken, async (req, res) => {
+//   // lecturerId: lecturer.id
+//   const lecturerId = req.lecturerId; 
+  
+//   if (!lecturerId) {
+//     console.error("Lecturer ID missing");
+//     return res.status(401).json({ error: 'Unauthorized - No lecturer ID' });
+//   }
+
+//   try {
+//     // 1. Get all courses assigned to the lecturer
+//     const assignedCourses = await LecturerCourse.findAll({
+//       where: { lecturerId },
+//       include: [{ model: Course }]
+//     });
+
+//     // 2. Check which courses have active sessions
+//     const activeSessions = await ActiveSession.findAll();
+//     const activeCourseIds = activeSessions.map(session => session.courseId);
+
+//     // 3. Build course list with active status
+//     const courseList = assignedCourses.map(c => ({
+//       courseId: c.Course.id,
+//       courseCode: c.Course.courseCode,
+//       courseTitle: c.Course.course_name,
+//       isActive: activeCourseIds.includes(c.Course.id)
+//     }));
+
+//     res.json(courseList);
+
+//     // res.render('lecturer-dashboard', { courseStatusList });
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).send('Server error');
+//   }
+// });
 
 
 // router.get('reports', async (req, res) => {

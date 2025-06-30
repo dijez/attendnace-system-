@@ -112,6 +112,29 @@ if (dashboardCourses) {
   });
 }  
 
+
+async function loadDashboardCounts() {
+  try {
+    const res = await fetch('/api/admin/dashboard-counts');
+    const data = await res.json();
+
+    document.getElementById('studentCount').innerText = data.students;
+    document.getElementById('lecturerCount').innerText = data.lecturers;
+    document.getElementById('courseCount').innerText = data.courses;
+  } catch (err) {
+    console.error('Error fetching dashboard data:', err);
+  }
+}
+
+window.onload = loadDashboardCounts;
+
+
+// You would fetch these from your backend
+// document.getElementById('studentCount').innerText = 150;
+// document.getElementById('lecturerCount').innerText = 20;
+// document.getElementById('courseCount').innerText = 40;
+
+
 // if (data.token) {
 //   localStorage.setItem('token', data.token);
 //   alert('Login successful!');

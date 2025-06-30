@@ -437,7 +437,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-
+ 
+// Display registered courses on dashboard
+const dashboardCourses = document.getElementById('registered-courses');
+if (dashboardCourses) {
+  fetch('/api/lecturer/courses', {
+    headers: {
+      'Authorization': `Bearer ${token}`
+    }
+  })
+  .then(res => res.json())
+  .then(courses => {
+    courses.forEach(course => {
+      const li = document.createElement('li');
+      li.textContent = `${course.course_name} (${course.courseCode})`;
+      dashboardCourses.appendChild(li);
+    });
+  })
+  .catch(err => {
+    console.error('Error loading dashboard courses:', err);
+  });
+}  
   
   
 });

@@ -28,6 +28,14 @@ LecturerCourse.schema = {
             key: 'id'
         },
         onDelete: 'CASCADE'
+    },
+    courseCode: {
+        type: DataTypes.STRING,
+        allowNull: true // Or false if you want to enforce it
+    },
+    course_name: {
+        type: DataTypes.STRING,
+        allowNull: true // Or false if required
     }
 }
 

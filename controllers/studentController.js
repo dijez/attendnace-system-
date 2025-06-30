@@ -231,6 +231,24 @@ router.post('/mark-attendance', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Attendance already marked.' });
     }
 
+    // console.log("Scan Count:", scanCount);
+// console.log("Expected Students:", sessionWithLimit?.expected_students);
+
+
+    const scanCount = await ScannedAttendance.count({
+      where: { attendanceSessionId: sessionId }
+    });
+    
+    // ✅ Fetch expectedStudents from AttendanceSession
+    const sessionWithLimit = await AttendanceSession.findByPk(sessionId, {
+      attributes: ['expected_students']
+    });
+    
+    if (scanCount >= sessionWithLimit.expected_students) {
+      // return res.status(403).json({ message: "Attendance limit reached." });
+    console.log("attendance limit reached")
+    }
+
 
      // Fetch the username from the Students table
      const student = await Student.findOne({

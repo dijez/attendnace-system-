@@ -8,9 +8,15 @@ const AttendanceSession = require('../models/AttendanceSession.js')
 const router = express.Router();
 const Course = require('../models/courses.js')
 const Student = require('../models/student.js')
+const Lecturer = require('../models/lecturer.js')
 // const createAttendanceLogModel = require('../models/AttendanceLog.js');
 const sequelize = require('../config/db.js');
 const verifyToken = require('../middleware/authMiddleware.js'); 
+const PDFDocument = require('pdfkit');
+const fs = require('fs');
+const { format } = require('@fast-csv/format');
+const path = require('path');
+const { writeToStream } = require('fast-csv');
 
 
 // ✅ Admin Registration Route
@@ -65,11 +71,17 @@ router.post('/login', async (req, res) => {
   }
 });
 
+
+
+
+
 router.post('/assign-lecturer', async (req, res) => {
   console.log('request body ', req.body)
   const { lecturerId, courseId,courseCode,course_name } = req.body;
   
   const course = await Course.findOne({ where: { id: courseId } });
+
+  console.log('Fetched course:', course);
 
   // // Validate input
   // if (!lecturerId || !courseId || !courseCode || !course_name) {
@@ -91,11 +103,18 @@ router.post('/assign-lecturer', async (req, res) => {
   
   try {
         // Assign lecturer to course
+        console.log("Saving to LecturerCourse:", {
+          lecturerId,
+          courseId,
+          courseCode: course.courseCode, // or course.dataValues.courseCode
+          course_name: course.course_name // or course.dataValues.course_name
+        });
+        
        const result = await LecturerCourse.create({
          lecturerId: parseInt(lecturerId), 
         courseId: parseInt(courseId),
-        courseCode: course.courseCode, 
-        course_name: course.course_name, });
+        courseCode: course.dataValues.courseCode, 
+        course_name: course.dataValues.course_name, });
 
         res.json({ message: 'Lecturer assigned successfully' });
     
@@ -213,6 +232,117 @@ router.get('/get-attendance-report/:course_code',async (req, res) => {
 
 
 
+router.get('/export-attendance-csv/:course_code', async (req, res) => {
+  const courseCode = req.params.course_code;
+  const reportTable = `attendance_log_course_${courseCode}`;
+
+  try {
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedAt DESC
+    `);
+
+
+     // Ensure the exports directory exists
+     const exportDir = path.join(__dirname, '..', 'exports');
+     if (!fs.existsSync(exportDir)) {
+       fs.mkdirSync(exportDir);
+     }
+
+    const filename = `attendance_${courseCode}_${Date.now()}.csv`;
+    const filePath = path.join(__dirname, '..', 'exports', filename);
+    const fileStream = fs.createWriteStream(filePath);
+
+    // Write CSV headers + data
+    writeToStream(fileStream, reportData, {
+      headers: true,
+      writeHeaders: true
+    })
+    .on('finish', () => {
+      res.download(filePath, filename, (err) => {
+        if (err) {
+          console.error('Download error:', err);
+          res.status(500).send('Download failed.');
+        } else {
+          // Optional: delete after download
+          fs.unlink(filePath, () => {});
+        }
+      });
+    })
+    .on('error', (err) => {
+      console.error('CSV Write Error:', err);
+      res.status(500).send('Failed to write CSV.');
+    });
+
+
+  } catch (error) {
+    console.error('CSV Export Error:', error);
+    res.status(500).send('Failed to export CSV.');
+  }
+});
+
+
+
+
+
+
+router.get('/export-attendance-pdf/:course_code', async (req, res) => {
+  const courseCode = req.params.course_code;
+  const reportTable = `attendance_log_course_${courseCode}`;
+
+  try {
+    const [reportData] = await sequelize.query(`
+      SELECT username, attendanceSessionId, scannedAt
+      FROM ${reportTable}
+      ORDER BY scannedAt DESC
+    `);
+
+    const doc = new PDFDocument();
+    const filename = `attendance_report_${new Date().toISOString().split('T')[0]}.pdf`;
+
+    // const filename = `attendance_${courseCode}_${Date.now()}.pdf`;
+
+    res.setHeader('Content-disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-type', 'application/pdf');
+
+    doc.pipe(res);
+    doc.fontSize(18).text(`Attendance Report: ${courseCode}`, { align: 'center' }).moveDown();
+
+    reportData.forEach((entry, i) => {
+      doc.fontSize(12).text(
+        `${i + 1}. ${entry.username} | Session ID: ${entry.attendancesessionid} | Time: ${new Date(entry.scannedat).toLocaleString()}`
+      );
+    });
+    
+    doc.end();
+  } catch (error) {
+    console.error('PDF Export Error:', error);
+    res.status(500).send('Failed to export PDF.');
+  }
+});
+
+
+
+
+router.get('/dashboard-counts', async (req, res) => {
+  try {
+    const studentCount = await Student.count();
+    const lecturerCount = await Lecturer.count();
+    const courseCount = await Course.count();
+
+    res.json({
+      students: studentCount,
+      lecturers: lecturerCount,
+      courses: courseCount,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to fetch dashboard counts' });
+  }
+});
+
+
 router.get('/lecturer-course-assignments', async (req, res) => {
   try {
     const assignments = await LecturerCourse.findAll({
@@ -234,6 +364,27 @@ router.get('/lecturer-course-assignments', async (req, res) => {
   }
 });
 
+
+
+
+router.delete('/lecturers/:id', async (req, res) => {
+  const lecturerId = req.params.id;
+
+  try {
+      const deleted = await Lecturer.destroy({
+          where: { id: lecturerId }
+      });
+
+      if (deleted) {
+          res.status(200).send("Lecturer deleted successfully");
+      } else {
+          res.status(404).send("Lecturer not found");
+      }
+  } catch (error) {
+      console.error("Error deleting lecturer:", error);
+      res.status(500).send("Internal Server Error");
+  }
+});
 
 
 // router.get('/attendance-report', async (req, res) => {

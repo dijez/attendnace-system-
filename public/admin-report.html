@@ -3,6 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <title>Attendance Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -13,25 +16,27 @@
 
     h2 {
       text-align: center;
-      color: #444;
+      color: #2c3e50;
       margin-bottom: 30px;
     }
 
-    form {
+    .form-section, .filter-section {
+      max-width: 700px;
+      margin: 0 auto 20px auto;
       display: flex;
-      flex-direction: column;
-      align-items: center;
+      flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 20px;
+      justify-content: center;
     }
 
-    input[type="text"] {
+    input[type="text"], input[type="date"] {
       padding: 12px;
       border: 1px solid #ccc;
       border-radius: 8px;
-      width: 100%;
-      max-width: 400px;
       font-size: 16px;
+      width: 100%;
+      max-width: 300px;
+      box-sizing: border-box;
     }
 
     button {
@@ -43,26 +48,30 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background-color 0.3s;
-      width: 100%;
-      max-width: 200px;
+      white-space: nowrap;
     }
 
     button:hover {
       background-color: #45a049;
     }
 
+    #reportContainer {
+      margin-top: 30px;
+      overflow-x: auto;
+    }
+
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 30px;
+      margin-top: 20px;
       background-color: #fff;
-      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
       border-radius: 8px;
       overflow: hidden;
     }
 
     th, td {
-      padding: 14px;
+      padding: 14px 16px;
       text-align: left;
       border-bottom: 1px solid #e0e0e0;
       word-break: break-word;
@@ -77,34 +86,33 @@
       background-color: #f9f9f9;
     }
 
-    #reportContainer {
-      margin-top: 20px;
-      overflow-x: auto;
-    }
-
     p {
       text-align: center;
       font-size: 16px;
     }
 
     p[style*="color:red"] {
-      color: #e74c3c;
+      color: #e74c3c !important;
+    }
+
+    .center-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
     }
 
     @media (max-width: 600px) {
-      th, td {
-        padding: 10px;
+      input[type="text"], input[type="date"], button {
         font-size: 14px;
+        padding: 10px;
+        max-width: 100%;
       }
 
-      button {
-        font-size: 14px;
-        padding: 10px;
-      }
-
-      input[type="text"] {
-        font-size: 14px;
-        padding: 10px;
+      .form-section, .filter-section {
+        flex-direction: column;
+        align-items: center;
       }
     }
   </style>
@@ -112,16 +120,29 @@
 <body>
 
   <h2>Generate Attendance Report</h2>
-  <form action="/api/admin/get-attendance-report" method="POST">
-    <!-- <input type="text" name="courseCode" id="courseCode" /> -->
+
+  <div class="form-section">
     <input type="text" name="courseCode" id="courseCodeInput" placeholder="Enter course code (e.g. PHY 101)">
-  </form>
-  <button onclick="fetchReport()">Generate Report</button>
-  
+    <button onclick="fetchReport()">Generate Report</button>
+  </div>
+
+  <div class="filter-section">
+    <input type="text" id="filterUsername" placeholder="Filter by Username">
+    <input type="date" id="filterDate">
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="clearFilter()">Clear Filter</button>
+  </div>
 
   <div id="reportContainer"></div>
 
+  <div class="center-buttons">
+    <button onclick="exportCSV()">Export as CSV</button>
+    <button onclick="exportPDF()">Export as PDF</button>
+  </div>
+
   <script>
+    let fullReportData = [];
+
     async function fetchReport() {
       const courseCode = document.getElementById('courseCodeInput').value.trim();
       if (!courseCode) {
@@ -131,18 +152,13 @@
 
       const formattedCourseCode = courseCode.replace(/\s+/g, '_').toLowerCase();
   
-  try {
-    const res = await fetch(`/api/admin/get-attendance-report/${formattedCourseCode}`, {
-          method: 'GET',
-  // headers: { 'Content-Type': 'application/json' },
-  // body: JSON.stringify({ courseCode })
-        }
-
-        );
+      try {
+        const res = await fetch(`/api/admin/get-attendance-report/${formattedCourseCode}`, { method: 'GET' });
         const data = await res.json();
 
         if (res.ok) {
-          displayReport(data.report);
+          fullReportData = data.report;
+          displayReport(fullReportData);
         } else {
           document.getElementById('reportContainer').innerHTML = `<p style="color:red;">${data.error}</p>`;
         }
@@ -150,6 +166,25 @@
         console.error('Error fetching report:', err);
         document.getElementById('reportContainer').innerHTML = `<p style="color:red;">Server error.</p>`;
       }
+    }
+
+    function applyFilters() {
+      const username = document.getElementById('filterUsername').value.toLowerCase();
+      const date = document.getElementById('filterDate').value;
+
+      const filtered = fullReportData.filter(entry => {
+        const usernameMatch = username ? entry.username.toLowerCase().includes(username) : true;
+        const dateMatch = date ? new Date(entry.scannedat).toISOString().split('T')[0] === date : true;
+        return usernameMatch && dateMatch;
+      });
+
+      displayReport(filtered);
+    }
+
+    function clearFilter() {
+      document.getElementById('filterUsername').value = '';
+      document.getElementById('filterDate').value = '';
+      displayReport(fullReportData);
     }
 
     function displayReport(reportData) {
@@ -176,6 +211,158 @@
       html += "</table>";
       document.getElementById('reportContainer').innerHTML = html;
     }
+
+
+
+    function exportCSV() {
+  const courseCode = document.getElementById('courseCodeInput').value.trim();
+  if (!courseCode) {
+    alert("Enter course code before exporting.");
+    return;
+  }
+
+  const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+
+  const table = document.querySelector("#reportContainer table");
+  if (!table) {
+    alert("No report data to export.");
+    return;
+  }
+
+  const currentRowCount = table.rows.length - 1; // exclude header
+  const isFiltered = currentRowCount !== fullReportData.length;
+
+  const filename = isFiltered ? "filtered_attendance_report.csv" : "attendance_report.csv";
+
+  // Generate CSV from the table
+  let csvContent = "";
+  const rows = table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    const rowData = Array.from(cells).map(cell => `"${cell.innerText}"`);
+    csvContent += rowData.join(",") + "\n";
+  });
+
+  // Download CSV
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+//     function exportCSV() {
+//   const table = document.querySelector("#reportContainer table");
+//   if (!table) {
+//     alert("No report data to export.");
+//     return;
+//   }
+
+//   const rows = Array.from(table.querySelectorAll("tr"));
+//   let csv = rows.map(row => {
+//     const cells = Array.from(row.querySelectorAll("th, td"));
+//     return cells.map(cell => `"${cell.innerText}"`).join(",");
+//   }).join("\n");
+
+//   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+//   const link = document.createElement("a");
+//   link.setAttribute("href", URL.createObjectURL(blob));
+//   link.setAttribute("download", "filtered_attendance_report.csv");
+//   link.style.visibility = "hidden";
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// }
+
+    // function exportCSV() {
+    //   const courseCode = document.getElementById('courseCodeInput').value.trim();
+    //   if (!courseCode) {
+    //     alert("Enter course code before exporting.");
+    //     return;
+    //   }
+    //   const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+    //   window.open(`/api/admin/export-attendance-csv/${formatted}`, '_blank');
+    // }
+
+
+    async function exportPDF() {
+  const table = document.querySelector("#reportContainer table");
+  if (!table) {
+    alert("No report data to export.");
+    return;
+  }
+
+  const currentRowCount = table.rows.length - 1; // exclude header
+  const isFiltered = currentRowCount !== fullReportData.length;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const rows = Array.from(table.querySelectorAll("tr")).map(tr =>
+    Array.from(tr.querySelectorAll("th, td")).map(td => td.innerText)
+  );
+
+  const headers = rows.shift();
+  const body = rows;
+
+  const title = isFiltered ? "Filtered Attendance Report" : "Attendance Report";
+  const filename = isFiltered ? "filtered_attendance_report.pdf" : "attendance_report.pdf";
+
+  doc.text(title, 14, 14);
+  doc.autoTable({
+    head: [headers],
+    body: body,
+    startY: 20,
+    theme: 'grid'
+  });
+
+  doc.save(filename);
+}
+
+//     async function exportPDF() {
+//   const table = document.querySelector("#reportContainer table");
+//   if (!table) {
+//     alert("No report data to export.");
+//     return;
+//   }
+
+//   const { jsPDF } = window.jspdf;
+//   const doc = new jsPDF();
+
+//   const rows = Array.from(table.querySelectorAll("tr")).map(tr => 
+//     Array.from(tr.querySelectorAll("th, td")).map(td => td.innerText)
+//   );
+
+//   const headers = rows.shift(); // first row is headers
+//   const body = rows;
+
+//   doc.text("Filtered Attendance Report", 14, 14);
+//   doc.autoTable({
+//     head: [headers],
+//     body: body,
+//     startY: 20,
+//     theme: 'grid'
+//   });
+
+//   doc.save("filtered_attendance_report.pdf");
+// }
+
+
+    // function exportPDF() {
+    //   const courseCode = document.getElementById('courseCodeInput').value.trim();
+    //   if (!courseCode) {
+    //     alert("Enter course code before exporting.");
+    //     return;
+    //   }
+    //   const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+    //   window.open(`/api/admin/export-attendance-pdf/${formatted}`, '_blank');
+    // }
   </script>
 
 </body>

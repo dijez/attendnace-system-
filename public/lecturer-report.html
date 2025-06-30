@@ -2,48 +2,376 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Document</title>
+  <title>Attendance Report</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f9f9f9;
+      padding: 20px;
+      color: #333;
+    }
+
+    h2 {
+      text-align: center;
+      color: #2c3e50;
+      margin-bottom: 30px;
+    }
+
+    .form-section, .filter-section {
+      max-width: 700px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+    }
+
+    input[type="text"], input[type="date"] {
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      font-size: 16px;
+      width: 100%;
+      max-width: 300px;
+      box-sizing: border-box;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      white-space: nowrap;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #reportContainer {
+      margin-top: 30px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background-color: #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+      word-break: break-word;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      color: #555;
+    }
+
+    tr:hover {
+      background-color: #f9f9f9;
+    }
+
+    p {
+      text-align: center;
+      font-size: 16px;
+    }
+
+    p[style*="color:red"] {
+      color: #e74c3c !important;
+    }
+
+    .center-buttons {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    @media (max-width: 600px) {
+      input[type="text"], input[type="date"], button {
+        font-size: 14px;
+        padding: 10px;
+        max-width: 100%;
+      }
+
+      .form-section, .filter-section {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
 </head>
 <body>
-  <h2>Attendance Report</h2>
-  <div class="container">
-    <h2>Manage report</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Username</th>
-                <th>course code</th>
-                <th>Created At</th>
-            </tr>
-        </thead>
-        <tbody id="report-list">
-            <!-- report data will be injected here -->
-        </tbody>
-    </table>
-</div>
 
-<script>
-   document.addEventListener('DOMContentLoaded', function () {
-    fetch('/api/lecturer/reports')
-        .then(res => res.json())
-        .then(data => {
-            let reportTable = document.getElementById('report-list');
-            reportTable.innerHTML = data.map(report => `
-                <tr>
-                    <td>${report.username}</td>
-                    <td>${report.course_code}</td>
-                    <td>${new Date(report.createdAt).toLocaleString('en-US', {
-                            dateStyle: 'medium',
-                            timeStyle: 'short'
-                        })
-                    }</td>
-                </tr>
-            `).join('');
-        })
-        .catch(err => console.error("Error loading students:", err));
-});
+  <h2>Generate Attendance Report</h2>
 
-</script>
+  <div class="form-section">
+    <input type="text" name="courseCode" id="courseCodeInput" placeholder="Enter course code (e.g. PHY 101)">
+    <button onclick="fetchReport()">Generate Report</button>
+  </div>
+
+  <div class="filter-section">
+    <input type="text" id="filterUsername" placeholder="Filter by Username">
+    <input type="date" id="filterDate">
+    <button onclick="applyFilters()">Apply Filters</button>
+    <button onclick="clearFilter()">Clear Filter</button>
+  </div>
+
+  <div id="reportContainer"></div>
+
+  <div class="center-buttons">
+    <button onclick="exportCSV()">Export as CSV</button>
+    <button onclick="exportPDF()">Export as PDF</button>
+  </div>
+
+  <script>
+    let fullReportData = [];
+
+
+    async function fetchReport() {
+      const courseCode = document.getElementById('courseCodeInput').value.trim();
+      if (!courseCode) {
+        alert("Please enter a course code.");
+        return;
+      }
+
+      const formattedCourseCode = courseCode.replace(/\s+/g, '_').toLowerCase();
+  
+      try {
+        const token = localStorage.getItem('token'); 
+        const res = await fetch(`/api/lecturer/get-attendance-report/${formattedCourseCode}`, {
+             method: 'GET',
+             headers: {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${localStorage.getItem('token')}`  
+  }
+ });
+        const data = await res.json();
+
+        if (res.ok) {
+          fullReportData = data.report;
+          displayReport(fullReportData);
+        } else {
+          document.getElementById('reportContainer').innerHTML = `<p style="color:red;">${data.error}</p>`;
+        }
+      } catch (err) {
+        console.error('Error fetching report:', err);
+        document.getElementById('reportContainer').innerHTML = `<p style="color:red;">Server error.</p>`;
+      }
+    }
+
+    function applyFilters() {
+      const username = document.getElementById('filterUsername').value.toLowerCase();
+      const date = document.getElementById('filterDate').value;
+
+      const filtered = fullReportData.filter(entry => {
+        const usernameMatch = username ? entry.username.toLowerCase().includes(username) : true;
+        const dateMatch = date ? new Date(entry.scannedat).toISOString().split('T')[0] === date : true;
+        return usernameMatch && dateMatch;
+      });
+
+      displayReport(filtered);
+    }
+
+    function clearFilter() {
+      document.getElementById('filterUsername').value = '';
+      document.getElementById('filterDate').value = '';
+      displayReport(fullReportData);
+    }
+
+    function displayReport(reportData) {
+      if (!reportData.length) {
+        document.getElementById('reportContainer').innerHTML = "<p>No records found.</p>";
+        return;
+      }
+
+      let html = `<table>
+        <tr>
+          <th>Username</th>
+          <th>Session ID</th>
+          <th>Scanned At</th>
+        </tr>`;
+
+      reportData.forEach(row => {
+        html += `<tr>
+          <td>${row.username}</td>
+          <td>${row.attendancesessionid}</td>
+          <td>${new Date(row.scannedat).toLocaleString()}</td>
+        </tr>`;
+      });
+
+      html += "</table>";
+      document.getElementById('reportContainer').innerHTML = html;
+    }
+
+
+
+    function exportCSV() {
+  const courseCode = document.getElementById('courseCodeInput').value.trim();
+  if (!courseCode) {
+    alert("Enter course code before exporting.");
+    return;
+  }
+
+  const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+
+  const table = document.querySelector("#reportContainer table");
+  if (!table) {
+    alert("No report data to export.");
+    return;
+  }
+
+  const currentRowCount = table.rows.length - 1; // exclude header
+  const isFiltered = currentRowCount !== fullReportData.length;
+
+  const filename = isFiltered ? "filtered_attendance_report.csv" : "attendance_report.csv";
+
+  // Generate CSV from the table
+  let csvContent = "";
+  const rows = table.querySelectorAll("tr");
+
+  rows.forEach(row => {
+    const cells = row.querySelectorAll("th, td");
+    const rowData = Array.from(cells).map(cell => `"${cell.innerText}"`);
+    csvContent += rowData.join(",") + "\n";
+  });
+
+  // Download CSV
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+
+  link.setAttribute("href", url);
+  link.setAttribute("download", filename);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
+
+//     function exportCSV() {
+//   const table = document.querySelector("#reportContainer table");
+//   if (!table) {
+//     alert("No report data to export.");
+//     return;
+//   }
+
+//   const rows = Array.from(table.querySelectorAll("tr"));
+//   let csv = rows.map(row => {
+//     const cells = Array.from(row.querySelectorAll("th, td"));
+//     return cells.map(cell => `"${cell.innerText}"`).join(",");
+//   }).join("\n");
+
+//   const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+//   const link = document.createElement("a");
+//   link.setAttribute("href", URL.createObjectURL(blob));
+//   link.setAttribute("download", "filtered_attendance_report.csv");
+//   link.style.visibility = "hidden";
+//   document.body.appendChild(link);
+//   link.click();
+//   document.body.removeChild(link);
+// }
+
+    // function exportCSV() {
+    //   const courseCode = document.getElementById('courseCodeInput').value.trim();
+    //   if (!courseCode) {
+    //     alert("Enter course code before exporting.");
+    //     return;
+    //   }
+    //   const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+    //   window.open(`/api/admin/export-attendance-csv/${formatted}`, '_blank');
+    // }
+
+
+    async function exportPDF() {
+  const table = document.querySelector("#reportContainer table");
+  if (!table) {
+    alert("No report data to export.");
+    return;
+  }
+
+  const currentRowCount = table.rows.length - 1; // exclude header
+  const isFiltered = currentRowCount !== fullReportData.length;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const rows = Array.from(table.querySelectorAll("tr")).map(tr =>
+    Array.from(tr.querySelectorAll("th, td")).map(td => td.innerText)
+  );
+
+  const headers = rows.shift();
+  const body = rows;
+
+  const title = isFiltered ? "Filtered Attendance Report" : "Attendance Report";
+  const filename = isFiltered ? "filtered_attendance_report.pdf" : "attendance_report.pdf";
+
+  doc.text(title, 14, 14);
+  doc.autoTable({
+    head: [headers],
+    body: body,
+    startY: 20,
+    theme: 'grid'
+  });
+
+  doc.save(filename);
+}
+
+//     async function exportPDF() {
+//   const table = document.querySelector("#reportContainer table");
+//   if (!table) {
+//     alert("No report data to export.");
+//     return;
+//   }
+
+//   const { jsPDF } = window.jspdf;
+//   const doc = new jsPDF();
+
+//   const rows = Array.from(table.querySelectorAll("tr")).map(tr => 
+//     Array.from(tr.querySelectorAll("th, td")).map(td => td.innerText)
+//   );
+
+//   const headers = rows.shift(); // first row is headers
+//   const body = rows;
+
+//   doc.text("Filtered Attendance Report", 14, 14);
+//   doc.autoTable({
+//     head: [headers],
+//     body: body,
+//     startY: 20,
+//     theme: 'grid'
+//   });
+
+//   doc.save("filtered_attendance_report.pdf");
+// }
+
+
+    // function exportPDF() {
+    //   const courseCode = document.getElementById('courseCodeInput').value.trim();
+    //   if (!courseCode) {
+    //     alert("Enter course code before exporting.");
+    //     return;
+    //   }
+    //   const formatted = courseCode.replace(/\s+/g, '_').toLowerCase();
+    //   window.open(`/api/admin/export-attendance-pdf/${formatted}`, '_blank');
+    // }
+  </script>
+
 </body>
 </html>

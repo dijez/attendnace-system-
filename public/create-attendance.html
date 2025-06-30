@@ -53,6 +53,18 @@
       border-radius: 4px;
       margin-top: 10px;
     }
+    #downloadBtn {
+    padding: 8px 16px;
+    background-color: #007bff;
+    border: none;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+  }
+
+  #downloadBtn:hover {
+    background-color: #0056b3;
+  }
   </style>
 </head>
 <body>
@@ -100,6 +112,7 @@
     <div id="qrCodeContainer" style="display: none; text-align: center;">
       <h3>Generated QR Code:</h3>
       <img id="qrCodeImage" alt="QR Code" />
+      <button id="downloadBtn">Download QR Code</button>
     </div>
   </div>
   <div id="makeActiveWrapper" style="display: none;">
@@ -263,6 +276,17 @@ fetch('/api/lecturer/courses', {
     });
 
 
+
+    // download qrcode
+    document.getElementById('downloadBtn').addEventListener('click', function () {
+    const qrImage = document.getElementById('qrCodeImage');
+    const link = document.createElement('a');
+    link.href = qrImage.src;
+    link.download = 'qr_code.png'; // This will download as qr_code.png
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  });
 
     // make active 
     document.getElementById('makeActiveBtn').addEventListener('click', async () => {

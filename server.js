@@ -45,14 +45,14 @@ const ActiveSession = require('./models/ActiveSession.js');
 
 const app = express();
 
-// ✅ Middleware
+//  Middleware
 app.use(express.json());
 app.use(cors());
 
-// ✅ Serve static files
+//  Serve static files
 app.use(express.static(path.join(__dirname, 'public')));
 
-// ✅ Serve index.html explicitly
+//  Serve index.html explicitly
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });

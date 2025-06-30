@@ -28,6 +28,25 @@ h2 {
     text-align: center;
     color: #007bff;
 }
+/* Button Styling */
+.delete-btn {
+    background-color: #dc3545; /* Bootstrap red */
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.delete-btn:focus {
+    outline: none;
+}
 
 /* Table Styling */
 table {
@@ -75,7 +94,10 @@ tr:hover {
                 <tr>
                     <th>Username</th>
                     <th>Email</th>
-                    <th>Created At</th>
+                    <!-- <th>Created At</th> -->
+                    <!-- <th>Assigned Courses</th> -->
+                    <th>Actions</th>
+
                 </tr>
             </thead>
             <tbody id="lecturer-list">
@@ -94,12 +116,52 @@ tr:hover {
                         <tr>
                             <td>${lecturer.username}</td>
                             <td>${lecturer.email}</td>
-                            <td>${new Date(lecturer.createdAt).toLocaleString()}</td>
+                             <td><button onclick="deleteLecturer(${lecturer.id})" 
+.delete-btn {
+    background-color: #dc3545; /* Bootstrap red */
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.delete-btn:hover {
+    background-color: #c82333; /* Darker red on hover */
+}
+
+.delete-btn:focus {
+    outline: none;
+}
+">Delete</button></td>
                         </tr>
                     `).join('');
                 })
                 .catch(err => console.error("Error loading lecturers:", err));
         });
+       
+       
+       
+       
+        function deleteLecturer(id) {
+    if (confirm("Are you sure you want to delete this lecturer?")) {
+        fetch(`/api/admin/lecturers/${id}`, {
+            method: 'DELETE'
+        })
+        .then(res => {
+            if (res.ok) {
+                alert('Lecturer deleted successfully');
+                location.reload();
+            } else {
+                alert('Failed to delete lecturer');
+            }
+        })
+        .catch(err => console.error("Delete error:", err));
+    }
+}
+
     </script>
 
 </body>
