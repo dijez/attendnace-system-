@@ -68,7 +68,7 @@ app.get('/student-login', (req, res) => {
 });
 
 
-// ✅ Admin: Fetch All Students
+//  Admin: Fetch All Students
 app.get('/api/admin/students', async (req, res) => {
     try {
         const students = await Student.findAll({
@@ -82,7 +82,7 @@ app.get('/api/admin/students', async (req, res) => {
     }
 });
 
-// ✅ Admin: Fetch All Lecturers
+//  Admin: Fetch All Lecturers
 app.get('/api/admin/lecturers', async (req, res) => {
     try {
         const lecturers = await Lecturer.findAll({
@@ -113,18 +113,18 @@ app.get('/api/courses', async (req, res) => {
   
 
 
-// ✅ Mount Routes
+//  Mount Routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/lecturer', lecturerRoutes);
 app.use('/api/student', studentRoutes);
 
-// ✅ Sync Database
+// Sync Database
 sequelize.sync()
     .then(() => console.log("Database Synced"))
     .catch(err => console.error("DB Sync Error:", err));
 
 
-// ✅ Start Server
+//  Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

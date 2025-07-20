@@ -232,7 +232,7 @@ button:hover {
 
     async function verifyProximityAndStart() {
       if (!course_id || !sessionId || !token) {
-        statusText.textContent = '❌ Missing required parameters or not logged in.';
+        statusText.textContent = ' Missing required parameters or not logged in.';
         statusText.style.color = 'red';
         return;
       }
@@ -244,7 +244,7 @@ button:hover {
 
         const sessionData = await sessionRes.json();
         if (!sessionData.success) {
-          statusText.textContent = '❌ Could not fetch session location.';
+          statusText.textContent = ' Could not fetch session location.';
           return;
         }
 
@@ -263,19 +263,19 @@ button:hover {
               reader.style.display = 'block';
               html5QrcodeScanner.render(onScanSuccess);
             } else {
-              statusText.textContent = `❌ Too far from class location (${Math.round(distance)}m). Move closer.`;
+              statusText.textContent = ` Too far from class location (${Math.round(distance)}m). Move closer.`;
               statusText.style.color = 'red';
             }
           },
           (error) => {
             console.error(error);
-            statusText.textContent = '❌ Failed to get your location.';
+            statusText.textContent = ' Failed to get your location.';
             statusText.style.color = 'red';
           }
         );
 
       } catch (err) {
-        statusText.textContent = '❌ Error during setup.';
+        statusText.textContent = ' Error during setup.';
         statusText.style.color = 'red';
         console.error(err);
       }
